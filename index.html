@@ -602,13 +602,16 @@
 
                 <!-- Hasil Format YYYY-MM-DD -->
                 <div class="space-y-2">
-                  <div class="flex items-center justify-between">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
                     <label for="khatibFormattedOutput" class="text-xs font-semibold text-slate-700">
                       Hasil Generate (<code class="font-mono text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>)
                     </label>
-                    <span id="converterCountBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      0 Tanggal Valid
-                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span id="converterDupTopBadge"></span>
+                      <span id="converterCountBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        0 Tanggal Valid
+                      </span>
+                    </div>
                   </div>
                   <textarea
                     id="khatibFormattedOutput"
@@ -620,6 +623,9 @@
                 </div>
               </div>
 
+              <!-- Panel Rincian Tanggal Duplikat pada Konverter (Muncul saat tombol diklik) -->
+              <div id="converterDuplicateDetails" class="hidden rounded-2xl bg-rose-50/90 border-2 border-rose-300 p-4 text-xs space-y-3 transition-all shadow-sm"></div>
+
               <!-- Opsi & Tombol Aksi Konverter -->
               <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600">
@@ -627,10 +633,13 @@
                     <input type="checkbox" id="convSortToggle" onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
                     <span>Urutkan Tanggal (Kronologis)</span>
                   </label>
-                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                    <input type="checkbox" id="convDedupToggle" checked onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
-                    <span>Hapus Duplikat</span>
-                  </label>
+                  <div class="inline-flex flex-wrap items-center gap-2">
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="convDedupToggle" checked onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                      <span>Hapus Duplikat</span>
+                    </label>
+                    <span id="converterDupOptionBadge"></span>
+                  </div>
                   <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
                     <input type="checkbox" id="convTrailingComma" onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
                     <span>Koma di akhir (<code class="font-mono">yyyy-mm-dd, </code>)</span>
@@ -994,13 +1003,16 @@
 
                   <!-- Hasil Format Angka Malam -->
                   <div class="space-y-2">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
                       <label for="khatibRamadhanFormattedOutput" class="text-xs font-semibold text-slate-700">
                         Hasil Generate (<code class="font-mono text-amber-700">1, 3, 5, ...</code>)
                       </label>
-                      <span id="ramadhanConverterCountBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
-                        0 Malam Valid
-                      </span>
+                      <div class="flex flex-wrap items-center gap-1.5">
+                        <span id="ramConverterDupTopBadge"></span>
+                        <span id="ramadhanConverterCountBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                          0 Malam Valid
+                        </span>
+                      </div>
                     </div>
                     <textarea
                       id="khatibRamadhanFormattedOutput"
@@ -1011,6 +1023,9 @@
                     ></textarea>
                   </div>
                 </div>
+
+                <!-- Panel Rincian Malam Duplikat pada Konverter Ramadhan -->
+                <div id="ramConverterDuplicateDetails" class="hidden rounded-2xl bg-rose-50/90 border-2 border-rose-300 p-4 text-xs space-y-3 transition-all shadow-sm"></div>
 
                 <!-- Opsi & Tombol Aksi Konverter Malam Ramadhan -->
                 <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1023,10 +1038,13 @@
                       <input type="checkbox" id="ramConvSortToggle" onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
                       <span>Urutkan Angka (1&rarr;30)</span>
                     </label>
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                      <input type="checkbox" id="ramConvDedupToggle" checked onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
-                      <span>Hapus Duplikat</span>
-                    </label>
+                    <div class="inline-flex flex-wrap items-center gap-2">
+                      <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" id="ramConvDedupToggle" checked onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
+                        <span>Hapus Duplikat</span>
+                      </label>
+                      <span id="ramConverterDupOptionBadge"></span>
+                    </div>
                     <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
                       <input type="checkbox" id="ramConvTrailingComma" onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
                       <span>Koma di akhir</span>
@@ -1322,7 +1340,9 @@
       },
       dupDetailsOpen: {
         jumat: false,
-        ramadhan: false
+        ramadhan: false,
+        convJumat: false,
+        convRamadhan: false
       }
     };
 
@@ -1595,6 +1615,8 @@
       appState.outDetailsOpen.ramDayOff1 = false;
       appState.dupDetailsOpen.jumat = false;
       appState.dupDetailsOpen.ramadhan = false;
+      appState.dupDetailsOpen.convJumat = false;
+      appState.dupDetailsOpen.convRamadhan = false;
 
       runDateConverter();
       processKhatibDayOff(false);
@@ -1613,8 +1635,48 @@
       const dedup = document.getElementById('ramConvDedupToggle').checked;
       const trailingComma = document.getElementById('ramConvTrailingComma').checked;
 
-      let nights = extractRamadhanNights(rawInput, expandRange);
+      const allNights = extractRamadhanNights(rawInput, expandRange);
 
+      // Hitung frekuensi kemunculan malam untuk mendeteksi duplikat
+      const freqMap = new Map();
+      allNights.forEach(n => freqMap.set(n, (freqMap.get(n) || 0) + 1));
+      const duplicateNights = [];
+      freqMap.forEach((count, night) => {
+        if (count > 1) {
+          duplicateNights.push({ value: night, count });
+        }
+      });
+
+      const topBadgeEl = document.getElementById('ramConverterDupTopBadge');
+      const optBadgeEl = document.getElementById('ramConverterDupOptionBadge');
+      const detailsEl = document.getElementById('ramConverterDuplicateDetails');
+
+      if (duplicateNights.length > 0) {
+        const btnHtml = `
+          <button
+            type="button"
+            onclick="toggleConverterDuplicateDetails('convRamadhan')"
+            class="text-[11px] text-rose-800 hover:text-rose-950 bg-rose-100 hover:bg-rose-200 px-2.5 py-0.5 rounded-full border border-rose-300 font-semibold transition inline-flex items-center gap-1 cursor-pointer shadow-sm"
+            title="Klik untuk melihat malam duplikat"
+          >
+            <span>🔁 ${duplicateNights.length} Malam Duplikat</span>
+            <span class="underline">${appState.dupDetailsOpen.convRamadhan ? '(Tutup)' : '(Lihat)'}</span>
+          </button>
+        `;
+        if (topBadgeEl) topBadgeEl.innerHTML = btnHtml;
+        if (optBadgeEl) optBadgeEl.innerHTML = btnHtml;
+        renderConverterDuplicateDetailsBox('convRamadhan', duplicateNights);
+      } else {
+        appState.dupDetailsOpen.convRamadhan = false;
+        if (topBadgeEl) topBadgeEl.innerHTML = '';
+        if (optBadgeEl) optBadgeEl.innerHTML = '';
+        if (detailsEl) {
+          detailsEl.classList.add('hidden');
+          detailsEl.innerHTML = '';
+        }
+      }
+
+      let nights = [...allNights];
       if (dedup) {
         nights = Array.from(new Set(nights));
       }
@@ -1873,7 +1935,48 @@
       const dedup = document.getElementById('convDedupToggle').checked;
       const trailingComma = document.getElementById('convTrailingComma').checked;
 
-      let dates = extractAndNormalizeDates(rawInput);
+      const allDates = extractAndNormalizeDates(rawInput);
+
+      // Hitung frekuensi kemunculan tanggal untuk mendeteksi duplikat
+      const freqMap = new Map();
+      allDates.forEach(d => freqMap.set(d, (freqMap.get(d) || 0) + 1));
+      const duplicateDates = [];
+      freqMap.forEach((count, dateStr) => {
+        if (count > 1) {
+          duplicateDates.push({ value: dateStr, count });
+        }
+      });
+
+      const topBadgeEl = document.getElementById('converterDupTopBadge');
+      const optBadgeEl = document.getElementById('converterDupOptionBadge');
+      const detailsEl = document.getElementById('converterDuplicateDetails');
+
+      if (duplicateDates.length > 0) {
+        const btnHtml = `
+          <button
+            type="button"
+            onclick="toggleConverterDuplicateDetails('convJumat')"
+            class="text-[11px] text-rose-800 hover:text-rose-950 bg-rose-100 hover:bg-rose-200 px-2.5 py-0.5 rounded-full border border-rose-300 font-semibold transition inline-flex items-center gap-1 cursor-pointer shadow-sm"
+            title="Klik untuk melihat tanggal duplikat"
+          >
+            <span>🔁 ${duplicateDates.length} Tanggal Duplikat</span>
+            <span class="underline">${appState.dupDetailsOpen.convJumat ? '(Tutup)' : '(Lihat)'}</span>
+          </button>
+        `;
+        if (topBadgeEl) topBadgeEl.innerHTML = btnHtml;
+        if (optBadgeEl) optBadgeEl.innerHTML = btnHtml;
+        renderConverterDuplicateDetailsBox('convJumat', duplicateDates);
+      } else {
+        appState.dupDetailsOpen.convJumat = false;
+        if (topBadgeEl) topBadgeEl.innerHTML = '';
+        if (optBadgeEl) optBadgeEl.innerHTML = '';
+        if (detailsEl) {
+          detailsEl.classList.add('hidden');
+          detailsEl.innerHTML = '';
+        }
+      }
+
+      let dates = [...allDates];
 
       if (dedup) {
         dates = Array.from(new Set(dates));
@@ -1897,6 +2000,98 @@
         formatted += ', ';
       }
       outputEl.value = formatted;
+    }
+
+    function toggleConverterDuplicateDetails(modeKey) {
+      appState.dupDetailsOpen[modeKey] = !appState.dupDetailsOpen[modeKey];
+      if (modeKey === 'convRamadhan') {
+        runRamadhanNightConverter();
+      } else {
+        runDateConverter();
+      }
+    }
+
+    function renderConverterDuplicateDetailsBox(modeKey, duplicateList) {
+      const isRamadhan = modeKey === 'convRamadhan';
+      const elId = isRamadhan ? 'ramConverterDuplicateDetails' : 'converterDuplicateDetails';
+      const el = document.getElementById(elId);
+      if (!el) return;
+
+      if (!appState.dupDetailsOpen[modeKey] || duplicateList.length === 0) {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+      }
+
+      el.classList.remove('hidden');
+
+      const itemsHtml = duplicateList.map(item => {
+        const label = isRamadhan ? `Malam ${item.value}` : item.value;
+        const subInfo = !isRamadhan ? formatIndonesianDate(item.value) : `Ramadhan Malam ke-${item.value}`;
+        return `
+          <div class="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-rose-200 shadow-sm">
+            <span class="font-mono font-bold text-slate-900 text-xs sm:text-sm">${label}</span>
+            <span class="text-[11px] text-slate-500">(${subInfo})</span>
+            <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-200 font-semibold text-[10px]">
+              Muncul ${item.count}x
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      el.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-200 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🔁</span>
+            <div>
+              <h5 class="font-bold text-rose-950 text-xs sm:text-sm">
+                Rincian ${isRamadhan ? 'Malam' : 'Tanggal'} Duplikat pada Input (${duplicateList.length} ${isRamadhan ? 'Malam' : 'Tanggal'})
+              </h5>
+              <p class="text-[11px] text-rose-700">
+                Daftar ${isRamadhan ? 'malam' : 'tanggal'} berikut terdeteksi diinput lebih dari satu kali pada kotak Input:
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 self-start sm:self-auto">
+            <button
+              type="button"
+              onclick="cleanConverterRawInputDuplicates('${modeKey}')"
+              class="text-[11px] px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition shadow-sm"
+            >
+              Rapikan & Hapus Duplikat di Input
+            </button>
+            <button
+              type="button"
+              onclick="toggleConverterDuplicateDetails('${modeKey}')"
+              class="text-[11px] px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-100 text-rose-800 border border-rose-200 font-medium transition"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 pt-1">
+          ${itemsHtml}
+        </div>
+      `;
+    }
+
+    function cleanConverterRawInputDuplicates(modeKey) {
+      if (modeKey === 'convRamadhan') {
+        const el = document.getElementById('khatibRamadhanRawInput');
+        const expandRange = document.getElementById('ramConvExpandRange').checked;
+        const unique = Array.from(new Set(extractRamadhanNights(el.value, expandRange)));
+        el.value = unique.join(', ');
+        appState.dupDetailsOpen.convRamadhan = false;
+        runRamadhanNightConverter();
+        showToast('Duplikat malam pada kotak input berhasil dibersihkan!');
+      } else {
+        const el = document.getElementById('khatibRawFormatInput');
+        const unique = Array.from(new Set(extractAndNormalizeDates(el.value)));
+        el.value = unique.join(', ');
+        appState.dupDetailsOpen.convJumat = false;
+        runDateConverter();
+        showToast('Duplikat tanggal pada kotak input berhasil dibersihkan!');
+      }
     }
 
     function loadConverterSample() {
