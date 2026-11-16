@@ -1,0 +1,3010 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manajemen Jadwal Masjid & Khatib/Dai</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar & smooth transitions */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .checkbox-card {
+      transition: all 0.15s ease-in-out;
+      user-select: none;
+    }
+    .checkbox-card:active {
+      transform: scale(0.99);
+    }
+    .chip-date {
+      transition: all 0.12s ease-in-out;
+      user-select: none;
+    }
+    .chip-date:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toastContent" class="bg-emerald-800 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 border border-emerald-600">
+      <svg class="w-5 h-5 text-emerald-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      <span id="toastMessage" class="text-sm font-medium">Berhasil disalin ke clipboard!</span>
+    </div>
+  </div>
+
+  <!-- Floating Button: Tampilkan Menu Sidebar (Muncul saat Sidebar Disembunyikan) -->
+  <button
+    type="button"
+    id="showSidebarFloatingBtn"
+    onclick="toggleSidebar(true)"
+    title="Tampilkan Menu Sidebar"
+    aria-label="Tampilkan Menu Sidebar"
+    class="hidden fixed top-4 left-4 z-50 bg-slate-900 hover:bg-emerald-700 text-white p-2.5 rounded-xl shadow-xl border border-slate-700/80 items-center justify-center transition-all duration-300 group"
+  >
+    <svg class="w-5 h-5 text-emerald-400 group-hover:text-white transition-transform duration-200 group-hover:scale-105" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+
+  <!-- Mobile Top Navigation Bar -->
+  <div id="mobileTopBar" class="lg:hidden bg-emerald-900 text-white px-4 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-md transition-all duration-300">
+    <div class="flex items-center gap-2.5">
+      <div class="p-2 bg-white/10 rounded-xl border border-white/15">
+        <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="font-bold text-sm leading-tight">Jadwal Khutbah & Dai</div>
+        <div id="mobileSubtitle" class="text-[11px] text-emerald-200">Menu Masjid</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="inline-flex rounded-xl bg-emerald-950/80 p-1 border border-emerald-700/60 text-xs font-semibold">
+        <button type="button" id="mobileNavMasjid" onclick="switchSidebarMenu('masjid')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-sm transition">
+          🕌 Masjid
+        </button>
+        <button type="button" id="mobileNavKhatib" onclick="switchSidebarMenu('khatib')" class="px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white transition">
+          🎙️ Khatib/Dai
+        </button>
+      </div>
+      <button
+        type="button"
+        onclick="toggleSidebar(false)"
+        title="Sembunyikan Navigasi Atas"
+        class="p-2 rounded-xl bg-emerald-950/70 hover:bg-emerald-800 text-emerald-200 hover:text-white border border-emerald-700/60 transition"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Layout Wrapper with Sidebar -->
+  <div class="min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Left Sidebar (Desktop) -->
+    <aside id="desktopSidebar" class="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 left-0 bg-slate-900 text-white border-r border-slate-800 select-none z-30 transition-all duration-300 ease-in-out transform translate-x-0">
+      <!-- Brand Header + Tombol Sembunyikan Sidebar -->
+      <div class="p-5 border-b border-slate-800/80 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="p-2.5 bg-emerald-600/20 border border-emerald-500/30 rounded-2xl text-emerald-400 shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div class="truncate">
+            <h1 class="font-bold text-sm sm:text-base tracking-tight text-white truncate">Manajemen Jadwal</h1>
+            <p class="text-[11px] text-slate-400 mt-0.5 truncate">Masjid & Khatib / Dai</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="toggleSidebar(false)"
+          title="Sembunyikan Sidebar"
+          aria-label="Sembunyikan Sidebar"
+          class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center justify-center shrink-0"
+        >
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation List -->
+      <div class="p-4 flex-1 space-y-2">
+        <div class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          Menu Utama
+        </div>
+
+        <button
+          type="button"
+          id="sideNavMasjid"
+          onclick="switchSidebarMenu('masjid')"
+          class="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left transition bg-emerald-600 text-white shadow-lg shadow-emerald-900/40 font-semibold"
+        >
+          <span class="text-xl">🕌</span>
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-bold leading-tight">Masjid</div>
+            <div class="text-[11px] text-emerald-100/90 truncate mt-0.5">Ceklis Jumat, Ramadhan & Manual</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          id="sideNavKhatib"
+          onclick="switchSidebarMenu('khatib')"
+          class="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left transition text-slate-300 hover:bg-slate-800/70 hover:text-white font-medium"
+        >
+          <span class="text-xl">🎙️</span>
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-bold leading-tight">Khatib / Dai</div>
+            <div class="text-[11px] text-slate-400 truncate mt-0.5">Format Tanggal & Rekap Day Off</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Sidebar Footer Info -->
+      <div class="p-4 m-4 rounded-2xl bg-slate-800/70 border border-slate-700/70 text-xs text-slate-300 space-y-1.5">
+        <div class="font-semibold text-emerald-400 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Tips Penggunaan</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Gunakan menu <strong class="text-white">Masjid</strong> untuk rekap ceklis jadwal kosong, dan menu <strong class="text-white">Khatib/Dai</strong> untuk merapikan format tanggal & menggabungkan Day Off.
+        </p>
+      </div>
+    </aside>
+
+    <!-- Main Right Content Area -->
+    <div id="mainContentWrapper" class="flex-1 lg:pl-72 flex flex-col min-h-screen transition-all duration-300 ease-in-out">
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 1: MENU MASJID (FITUR LENGKAP YANG SUDAH TUNTAS)                     -->
+      <!-- ========================================================================= -->
+      <div id="viewMasjid" class="pb-16">
+        <!-- Header Masjid -->
+        <header class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-700 text-white shadow-md">
+          <div class="max-w-5xl mx-auto px-4 py-6 sm:px-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div class="p-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 shrink-0">
+                  <span class="text-2xl">🕌</span>
+                </div>
+                <div>
+                  <div class="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold bg-emerald-900/50 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-400/20 mb-1">
+                    Menu Masjid
+                  </div>
+                  <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Rekap Jadwal Khutbah Jumat & Ramadhan</h2>
+                  <p class="text-emerald-100 text-xs sm:text-sm mt-0.5">
+                    Ceklis jadwal yang <span class="underline decoration-emerald-300 font-medium">sudah terisi/tidak tersedia</span>. Jadwal yang <span class="font-semibold text-white">tidak diceklis</span> akan direkap.
+                  </p>
+                </div>
+              </div>
+              <div class="self-start sm:self-auto">
+                <button onclick="resetCurrentModeDemo()" class="text-xs bg-white/15 hover:bg-white/25 text-white px-3.5 py-2.5 rounded-xl border border-white/20 transition flex items-center gap-1.5 font-medium">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                  Reset Semua Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content Masjid -->
+        <main class="max-w-5xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
+
+          <!-- Step 1: Input & Generator Tanggal / Ramadhan -->
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+                <h2 id="step1Title" class="font-semibold text-slate-800 text-sm sm:text-base">Input / Generate Daftar Tanggal</h2>
+              </div>
+              <!-- Tabs Toggle -->
+              <div class="inline-flex rounded-xl bg-slate-200/80 p-1 text-xs font-semibold self-start sm:self-auto gap-1">
+                <button type="button" id="tabBtnJumat" onclick="switchTab('jumat')" class="px-3.5 py-2 rounded-lg bg-white text-emerald-700 shadow-sm transition flex items-center gap-1.5">
+                  <span>🕌 Otomatis Jumat</span>
+                </button>
+                <button type="button" id="tabBtnRamadhan" onclick="switchTab('ramadhan')" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                  <span>🌙 Ramadhan</span>
+                </button>
+                <button type="button" id="tabBtnManual" onclick="switchTab('manual')" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                  <span>✍️ Input Manual</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <!-- Tab 1: Otomatis Jumat -->
+              <div id="panelJumat" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label for="startDate" class="block text-xs font-medium text-slate-600 mb-1">Tanggal Mulai</label>
+                    <input type="date" id="startDate" value="2027-01-01" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono" />
+                  </div>
+                  <div>
+                    <label for="endDate" class="block text-xs font-medium text-slate-600 mb-1">Tanggal Selesai</label>
+                    <input type="date" id="endDate" value="2027-12-31" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono" />
+                  </div>
+                  <div>
+                    <button type="button" onclick="generateFridays()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                      <span>Generate Hari Jumat</span>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-500">
+                  *Sistem menghitung setiap tanggal yang jatuh pada <strong>Hari Jumat</strong> secara akurat sesuai zona waktu lokal.
+                </p>
+              </div>
+
+              <!-- Tab 2: Ramadhan (Malam 1 - Malam 30) -->
+              <div id="panelRamadhan" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5">
+                  <div>
+                    <h3 class="text-sm font-semibold text-emerald-950 flex items-center gap-1.5">
+                      <span>🌙 Generator Jadwal Malam Ramadhan (Malam 1 s/d Malam 30)</span>
+                    </h3>
+                    <p class="text-xs text-emerald-800 mt-0.5">
+                      Hasil rekap untuk malam yang <strong>tidak diceklis</strong> otomatis berupa <strong>angka saja</strong> (contoh: <code class="font-mono font-semibold bg-white px-1.5 py-0.5 rounded border border-emerald-200">2, 3, 4, 5, 7</code>).
+                    </p>
+                  </div>
+                  <button type="button" onclick="loadRamadhanExample()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3.5 py-2 rounded-xl shadow-sm transition shrink-0">
+                    Contoh (Output: 2, 3, 4, 5, 7)
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-1">
+                  <div>
+                    <label for="ramadhanStartInput" class="block text-xs font-medium text-slate-600 mb-1">Malam Mulai (1–30)</label>
+                    <input type="number" id="ramadhanStartInput" min="1" max="30" value="1" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono" />
+                  </div>
+                  <div>
+                    <label for="ramadhanEndInput" class="block text-xs font-medium text-slate-600 mb-1">Malam Selesai (1–30)</label>
+                    <input type="number" id="ramadhanEndInput" min="1" max="30" value="30" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono" />
+                  </div>
+                  <div>
+                    <button type="button" onclick="generateRamadhanCustomRange()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm px-4 py-2 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                      <span>Muat Rentang Malam</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 3: Input Manual -->
+              <div id="panelManual" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label for="manualTextarea" class="block text-xs font-semibold text-slate-700">
+                      Masukkan Daftar Tanggal atau Item Manual
+                    </label>
+                    <p class="text-xs text-slate-500">
+                      Pisahkan setiap tanggal/item dengan <strong>baris baru (Enter)</strong> atau <strong>koma (,)</strong>.
+                    </p>
+                  </div>
+                  <button type="button" onclick="fillManualSampleText()" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-medium transition self-start sm:self-auto">
+                    Isi Contoh Tanggal
+                  </button>
+                </div>
+
+                <textarea
+                  id="manualTextarea"
+                  rows="4"
+                  placeholder="Contoh:&#10;2027-01-01&#10;2027-01-08&#10;2027-01-15&#10;2027-01-22"
+                  class="w-full p-3.5 rounded-xl border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                ></textarea>
+
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <button type="button" onclick="processManualInput(true)" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Ganti Daftar dengan Input Ini</span>
+                  </button>
+                  <button type="button" onclick="processManualInput(false)" class="bg-slate-800 hover:bg-slate-900 active:bg-black text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    <span>Tambahkan ke Daftar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 2: Daftar Ceklis Tanggal / Malam Ramadhan -->
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="border-b border-slate-100 bg-slate-50/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+                <div>
+                  <h2 id="step2Title" class="font-semibold text-slate-800 text-sm sm:text-base">Daftar Ceklis Tanggal Jumat</h2>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 text-slate-700 font-medium">
+                  Total: <strong id="countTotal" class="font-mono">0</strong>
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-medium border border-emerald-200">
+                  Diceklis (Sembunyi): <strong id="countChecked" class="font-mono">0</strong>
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-medium border border-amber-300">
+                  Tidak Diceklis (Tampil): <strong id="countUnchecked" class="font-mono">0</strong>
+                </span>
+              </div>
+            </div>
+
+            <div class="px-5 py-3 bg-slate-50/40 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" onclick="toggleAll(true)" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium transition">
+                  Ceklis Semua
+                </button>
+                <button type="button" onclick="toggleAll(false)" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium transition">
+                  Hapus Semua Ceklis
+                </button>
+                <button type="button" onclick="invertSelection()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium transition">
+                  Balik Pilihan (Invert)
+                </button>
+                <button type="button" onclick="clearCurrentList()" class="text-xs px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 font-medium transition">
+                  Kosongkan Daftar
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  id="quickAddInput"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();quickAddItem();}"
+                  placeholder="Tambah tanggal (2027-02-05)..."
+                  class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none w-full sm:w-52"
+                />
+                <button type="button" onclick="quickAddItem()" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition shrink-0">
+                  + Tambah Cepat
+                </button>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div id="dateListContainer" class="space-y-5 max-h-[580px] overflow-y-auto pr-1"></div>
+
+              <div id="emptyState" class="hidden py-10 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <p class="text-sm font-medium text-slate-600">Daftar pada tab ini masih kosong</p>
+                <p class="text-xs text-slate-400 mt-1">Gunakan tombol generator atau form input di Langkah 1 untuk memuat jadwal.</p>
+              </div>
+            </div>
+
+            <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div class="flex items-center gap-2 text-xs text-slate-600">
+                <input type="checkbox" id="trailingCommaToggle" onchange="generateOutput(false)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
+                <label for="trailingCommaToggle" class="cursor-pointer select-none">
+                  Tambahkan koma di akhir (<code id="trailingCommaExample" class="font-mono text-slate-700 bg-slate-200/70 px-1 py-0.5 rounded">yyyy-mm-dd, yyyy-mm-dd, </code>)
+                </label>
+              </div>
+
+              <button type="button" onclick="generateOutput(true)" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                <span>Kirim / Buat Rekap</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 3: Hasil Rekap (Tidak Diceklis) -->
+          <section id="outputSection" class="bg-white rounded-2xl shadow-sm border-2 border-emerald-500/80 overflow-hidden transition-all">
+            <div class="border-b border-emerald-100 bg-emerald-50/70 px-5 py-3.5 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+                <div>
+                  <h2 id="step3Title" class="font-semibold text-emerald-950 text-sm sm:text-base">Hasil Rekap (Tidak Diceklis)</h2>
+                </div>
+              </div>
+              <span id="outputBadgeCount" class="text-xs font-medium px-2.5 py-1 rounded-lg bg-emerald-600 text-white">
+                0 Tersedia
+              </span>
+            </div>
+
+            <div class="p-5 space-y-4">
+              <p id="outputDescription" class="text-xs text-slate-600">
+                Berikut adalah daftar tanggal yang <strong>tidak diceklis</strong> dalam format <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>:
+              </p>
+
+              <div class="relative">
+                <textarea
+                  id="outputText"
+                  readonly
+                  rows="3"
+                  placeholder="Tidak ada jadwal yang ditampilkan (semua sedang diceklis atau daftar kosong)."
+                  class="w-full p-4 rounded-xl bg-slate-900 text-emerald-300 font-mono text-sm sm:text-base leading-relaxed border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 selection:bg-emerald-600 selection:text-white"
+                ></textarea>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                  <span>Siap disalin ke WhatsApp, Spreadsheet, atau aplikasi jadwal masjid.</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    id="copyBtn"
+                    onclick="copyResult()"
+                    class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 active:bg-black text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                  >
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <span id="copyBtnText">Copy Teks</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 2: MENU KHATIB / DAI (FITUR BARU)                                    -->
+      <!-- ========================================================================= -->
+      <div id="viewKhatib" class="hidden pb-16">
+        <!-- Header Khatib / Dai -->
+        <header class="bg-gradient-to-r from-teal-900 via-emerald-800 to-slate-900 text-white shadow-md">
+          <div class="max-w-5xl mx-auto px-4 py-6 sm:px-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div class="p-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 shrink-0">
+                  <span class="text-2xl">🎙️</span>
+                </div>
+                <div>
+                  <div class="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold bg-teal-950/60 text-teal-200 px-2.5 py-0.5 rounded-full border border-teal-400/20 mb-1">
+                    Menu Khatib / Dai
+                  </div>
+                  <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Konverter Format & Rekap Day Off Khatib/Dai</h2>
+                  <p id="khatibHeaderDesc" class="text-emerald-100 text-xs sm:text-sm mt-0.5">
+                    Pilih mode <strong>📅 Khutbah Jumat (Tanggal)</strong> atau <strong>🌙 Ramadhan (Malam 1–30)</strong> untuk merapikan format dan menggabungkan jadwal Day Off 1 & 2.
+                  </p>
+                </div>
+              </div>
+              <div class="self-start sm:self-auto flex flex-wrap items-center gap-2">
+                <button onclick="resetKhatibActiveSubTabDemo()" class="text-xs bg-white/15 hover:bg-white/25 text-white px-3.5 py-2.5 rounded-xl border border-white/20 transition flex items-center gap-1.5 font-medium">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                  <span id="resetKhatibBtnLabel">Reset Semua Data</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sub-Navigation Tabs inside Khatib / Dai -->
+            <div class="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span class="text-xs text-emerald-200 font-medium">Pilih Kategori Jadwal Khatib / Dai:</span>
+              <div class="inline-flex rounded-xl bg-slate-950/50 p-1 border border-white/15 text-xs sm:text-sm font-semibold self-start sm:self-auto gap-1">
+                <button
+                  type="button"
+                  id="khatibSubTabJumatBtn"
+                  onclick="switchKhatibSubTab('jumat')"
+                  class="px-4 py-2 rounded-lg bg-emerald-500 text-white shadow-sm transition flex items-center gap-2"
+                >
+                  <span>📅 Khutbah Jumat (Tanggal)</span>
+                </button>
+                <button
+                  type="button"
+                  id="khatibSubTabRamadhanBtn"
+                  onclick="switchKhatibSubTab('ramadhan')"
+                  class="px-4 py-2 rounded-lg text-emerald-100 hover:text-white hover:bg-white/10 transition flex items-center gap-2"
+                >
+                  <span>🌙 Ramadhan (Malam 1 - 30)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content Khatib / Dai -->
+        <main class="max-w-5xl mx-auto px-4 sm:px-6 mt-6">
+
+          <!-- =================================================================== -->
+          <!-- SUB-VIEW A: KHUTBAH JUMAT (TANGGAL YYYY-MM-DD)                      -->
+          <!-- =================================================================== -->
+          <div id="khatibSubViewJumat" class="space-y-8">
+
+          <!-- =============================================================== -->
+          <!-- FITUR 1 KHATIB: UBAH FORMAT TANGGAL KE YYYY-MM-DD, YYYY-MM-DD   -->
+          <!-- =============================================================== -->
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="border-b border-slate-100 bg-slate-50/70 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shadow-sm">1</span>
+                <div>
+                  <h3 class="font-bold text-slate-800 text-sm sm:text-base">Ubah Format Tanggal ke <code class="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">yyyy-mm-dd, yyyy-mm-dd</code></h3>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    Masukkan tanggal dengan tanda pisah apa saja (Enter, titik koma <code class="font-mono">;</code>, spasi, garis miring <code class="font-mono">/</code>, atau strip) — otomatis diubah menjadi <code class="font-mono">yyyy-mm-dd, yyyy-mm-dd</code>.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 self-start sm:self-auto">
+                <button type="button" onclick="loadConverterSample()" class="text-xs px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold transition">
+                  Isi Contoh Tanda Pisah Campuran
+                </button>
+                <button type="button" onclick="clearConverterInput()" class="text-xs px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition">
+                  Bersihkan
+                </button>
+              </div>
+            </div>
+
+            <div class="p-5 space-y-4">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Input Mentah -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label for="khatibRawFormatInput" class="text-xs font-semibold text-slate-700">
+                      Input Tanggal (Tanda Pisah & Format Bebas)
+                    </label>
+                    <span class="text-[11px] text-slate-400">Otomatis mendeteksi saat diketik / dipaste</span>
+                  </div>
+                  <textarea
+                    id="khatibRawFormatInput"
+                    rows="5"
+                    oninput="runDateConverter()"
+                    placeholder="Masukkan atau paste tanggal di sini...&#10;Contoh:&#10;2027-01-01&#10;2027-01-08; 2027/01/15 | 22-01-2027&#10;2027-01-29   2027-02-05"
+                    class="w-full p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none leading-relaxed"
+                  ></textarea>
+                </div>
+
+                <!-- Hasil Format YYYY-MM-DD -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label for="khatibFormattedOutput" class="text-xs font-semibold text-slate-700">
+                      Hasil Generate (<code class="font-mono text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>)
+                    </label>
+                    <span id="converterCountBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      0 Tanggal Valid
+                    </span>
+                  </div>
+                  <textarea
+                    id="khatibFormattedOutput"
+                    readonly
+                    rows="5"
+                    placeholder="Hasil konversi yyyy-mm-dd, yyyy-mm-dd akan tampil otomatis di sini..."
+                    class="w-full p-3.5 rounded-xl bg-slate-900 text-emerald-300 border border-slate-700 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed selection:bg-emerald-600 selection:text-white"
+                  ></textarea>
+                </div>
+              </div>
+
+              <!-- Opsi & Tombol Aksi Konverter -->
+              <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="convSortToggle" onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                    <span>Urutkan Tanggal (Kronologis)</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="convDedupToggle" checked onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                    <span>Hapus Duplikat</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="convTrailingComma" onchange="runDateConverter()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                    <span>Koma di akhir (<code class="font-mono">yyyy-mm-dd, </code>)</span>
+                  </label>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onclick="sendConvertedToTarget('master')"
+                    class="text-xs px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium transition"
+                  >
+                    Kirim ke Data Tanggal
+                  </button>
+                  <button
+                    type="button"
+                    onclick="sendConvertedToTarget('dayoff1')"
+                    class="text-xs px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-medium transition"
+                  >
+                    + Ke Day Off 1
+                  </button>
+                  <button
+                    type="button"
+                    onclick="sendConvertedToTarget('dayoff2')"
+                    class="text-xs px-3 py-2 rounded-xl border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-medium transition"
+                  >
+                    + Ke Day Off 2
+                  </button>
+                  <button
+                    type="button"
+                    onclick="copyTextFromElement('khatibFormattedOutput', 'Hasil format tanggal berhasil disalin!')"
+                    class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Copy Hasil Format</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- =============================================================== -->
+          <!-- FITUR 2 KHATIB: DATA TANGGAL & GABUNGAN DAY OFF 1 + DAY OFF 2   -->
+          <!-- =============================================================== -->
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="border-b border-slate-100 bg-slate-50/70 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shadow-sm">2</span>
+                <div>
+                  <h3 class="font-bold text-slate-800 text-sm sm:text-base">Penginputan Tanggal & Rekap Gabungan Day Off (Day Off 1 & Day Off 2)</h3>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    Masukkan Daftar Tanggal Utama, lalu isi <strong>Day Off 1</strong> dan <strong>Day Off 2</strong> untuk menghasilkan rekap gabungan otomatis.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700 font-medium">
+                  Data Tanggal: <strong id="masterCountBadge" class="font-mono">0</strong>
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-medium border border-amber-300">
+                  Day Off 1: <strong id="dayOff1CountBadge" class="font-mono">0</strong>
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 font-medium border border-indigo-300">
+                  Day Off 2: <strong id="dayOff2CountBadge" class="font-mono">0</strong>
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5 space-y-6">
+
+              <!-- 2A. Input Data Tanggal Utama -->
+              <div class="space-y-2.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label for="khatibMasterDatesInput" class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <span>📅 Daftar Tanggal Utama (Data Tanggal)</span>
+                    </label>
+                    <p class="text-xs text-slate-500">
+                      Data acuan seluruh jadwal tanggal (misalnya 53 hari Jumat tahun 2027). Anda bisa mengetik/paste atau merapikan otomatis.
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2 self-start sm:self-auto">
+                    <button type="button" onclick="normalizeTextareaInPlace('khatibMasterDatesInput')" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">
+                      Rapikan Format (yyyy-mm-dd)
+                    </button>
+                    <button type="button" onclick="document.getElementById('khatibMasterDatesInput').value=''; processKhatibDayOff(false);" class="text-xs px-2.5 py-1.5 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-slate-200 font-medium transition">
+                      Kosongkan
+                    </button>
+                    <button type="button" onclick="toggleVisualPicker()" id="togglePickerBtn" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold transition">
+                      Tampilkan Klik Visual Tanggal
+                    </button>
+                  </div>
+                </div>
+
+                <textarea
+                  id="khatibMasterDatesInput"
+                  rows="4"
+                  oninput="processKhatibDayOff()"
+                  placeholder="Masukkan daftar tanggal utama di sini (contoh: 2027-01-01, 2027-01-08, 2027-01-15)..."
+                  class="w-full p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none leading-relaxed bg-slate-50/50"
+                ></textarea>
+
+                <!-- Panel Pemilih Visual Interaktif (Opsional untuk memudahkan klik Day Off 1 / 2 dari Daftar Tanggal) -->
+                <div id="visualPickerContainer" class="hidden rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200/70 pb-3">
+                    <div>
+                      <h4 class="text-xs font-bold text-emerald-950">Klik Tanggal di Bawah untuk Memasukkan ke Day Off 1 atau Day Off 2:</h4>
+                      <p class="text-[11px] text-emerald-800">Memudahkan memilih tanggal dari Daftar Tanggal Utama tanpa mengetik manual.</p>
+                    </div>
+                    <div class="inline-flex rounded-xl bg-white p-1 border border-slate-200 text-xs font-semibold self-start sm:self-auto">
+                      <button type="button" id="pickerTargetBtn1" onclick="setPickerTarget(1)" class="px-3 py-1.5 rounded-lg bg-amber-500 text-white shadow-sm transition">
+                        Target Klik: Day Off 1
+                      </button>
+                      <button type="button" id="pickerTargetBtn2" onclick="setPickerTarget(2)" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                        Target Klik: Day Off 2
+                      </button>
+                    </div>
+                  </div>
+                  <div id="visualPickerGrid" class="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
+                    <!-- Di-render via JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2B. Grid Inputan Day Off 1 & Day Off 2 -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Kotak Inputan Day Off 1 -->
+                <div class="rounded-2xl border-2 border-amber-200/90 bg-amber-50/30 p-4 space-y-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-bold">Day Off 1</span>
+                      <label for="khatibDayOff1Input" class="text-xs sm:text-sm font-bold text-slate-800">Inputan Day Off 1</label>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" onclick="normalizeTextareaInPlace('khatibDayOff1Input')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 font-medium transition">
+                        Rapikan Format
+                      </button>
+                      <button type="button" onclick="clearDayOffBox(1)" class="text-[11px] px-2 py-1 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-slate-200 font-medium transition">
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    id="khatibDayOff1Input"
+                    rows="4"
+                    oninput="processKhatibDayOff()"
+                    placeholder="Contoh:&#10;2027-02-26,&#10;2027-03-05, 2027-03-12, 2027-03-19, 2027-03-26"
+                    class="w-full p-3.5 rounded-xl border border-amber-300 bg-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none leading-relaxed"
+                  ></textarea>
+
+                  <div id="dayOff1ValidationInfo" class="text-[11px] text-slate-600 flex items-center justify-between">
+                    <span>Terdeteksi: <strong class="font-mono">0</strong> tanggal</span>
+                    <span class="text-emerald-700 font-medium">✓ Sesuai format yyyy-mm-dd</span>
+                  </div>
+                  <div id="dayOff1OutDetails" class="hidden rounded-xl bg-amber-100/70 border border-amber-300 p-3 text-xs space-y-2 transition-all"></div>
+                </div>
+
+                <!-- Kotak Inputan Day Off 2 -->
+                <div class="rounded-2xl border-2 border-indigo-200/90 bg-indigo-50/30 p-4 space-y-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">Day Off 2</span>
+                      <label for="khatibDayOff2Input" class="text-xs sm:text-sm font-bold text-slate-800">Inputan Day Off 2</label>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" onclick="normalizeTextareaInPlace('khatibDayOff2Input')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 font-medium transition">
+                        Rapikan Format
+                      </button>
+                      <button type="button" onclick="clearDayOffBox(2)" class="text-[11px] px-2 py-1 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-slate-200 font-medium transition">
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    id="khatibDayOff2Input"
+                    rows="4"
+                    oninput="processKhatibDayOff()"
+                    placeholder="Contoh:&#10;2027-10-08, 2027-10-15, 2027-10-22, 2027-10-29, 2027-11-05"
+                    class="w-full p-3.5 rounded-xl border border-indigo-300 bg-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none leading-relaxed"
+                  ></textarea>
+
+                  <div id="dayOff2ValidationInfo" class="text-[11px] text-slate-600 flex items-center justify-between">
+                    <span>Terdeteksi: <strong class="font-mono">0</strong> tanggal</span>
+                    <span class="text-emerald-700 font-medium">✓ Sesuai format yyyy-mm-dd</span>
+                  </div>
+                  <div id="dayOff2OutDetails" class="hidden rounded-xl bg-indigo-100/70 border border-indigo-300 p-3 text-xs space-y-2 transition-all"></div>
+                </div>
+              </div>
+
+              <!-- 2C. Opsi Penggabungan -->
+              <div class="px-4 py-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-4 text-xs text-slate-700">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="khatibMergeDedup" checked onchange="processKhatibDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                    <span>Hapus tanggal ganda jika ada yang sama</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="khatibMergeSort" onchange="processKhatibDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                    <span>Urutkan Kronologis</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="khatibMergeTrailingComma" onchange="processKhatibDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                    <span>Tambahkan koma di akhir (<code class="font-mono">yyyy-mm-dd, </code>)</span>
+                  </label>
+                </div>
+
+                <button
+                  type="button"
+                  onclick="processKhatibDayOff(true)"
+                  class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 shrink-0"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                  </svg>
+                  <span>Generate Gabungan Day Off 1 & 2</span>
+                </button>
+              </div>
+
+              <!-- 2D. Hasil Generate: Gabungan Day Off 1 & Day Off 2 -->
+              <div id="khatibOutputCard" class="rounded-2xl border-2 border-emerald-500 bg-emerald-50/30 overflow-hidden transition-all">
+                <div class="bg-emerald-600 text-white px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h4 class="font-bold text-sm sm:text-base">Hasil Generate: Gabungan Day Off 1 & Day Off 2</h4>
+                  </div>
+                  <span id="mergedDayOffBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-800 text-emerald-100 self-start sm:self-auto">
+                    10 Tanggal Day Off
+                  </span>
+                </div>
+
+                <div class="p-5 space-y-4">
+                  <p class="text-xs text-slate-600">
+                    Hasil penggabungan otomatis antara <strong>Day Off 1</strong> dan <strong>Day Off 2</strong> dalam format <code class="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>:
+                  </p>
+
+                  <textarea
+                    id="khatibMergedDayOffOutput"
+                    readonly
+                    rows="3"
+                    placeholder="Hasil gabungan Day Off 1 dan Day Off 2 akan muncul di sini..."
+                    class="w-full p-4 rounded-xl bg-slate-900 text-emerald-300 font-mono text-sm sm:text-base leading-relaxed border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 selection:bg-emerald-600 selection:text-white"
+                  ></textarea>
+
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                      <span>Format otomatis bersih dan siap di-copy.</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onclick="copyTextFromElement('khatibMergedDayOffOutput', 'Hasil gabungan Day Off 1 & 2 berhasil disalin!')"
+                      class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 active:bg-black text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                    >
+                      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                      </svg>
+                      <span>Copy Gabungan Day Off</span>
+                    </button>
+                  </div>
+
+                  <!-- Opsi Tambahan: Lihat Tanggal Tersedia (Data Tanggal dikurangi Day Off 1 & 2) -->
+                  <div class="pt-3 border-t border-emerald-200/70">
+                    <details class="group">
+                      <summary class="cursor-pointer list-none flex items-center justify-between text-xs font-semibold text-emerald-900 hover:text-emerald-700 py-1">
+                        <span class="flex items-center gap-1.5">
+                          <svg class="w-4 h-4 transition-transform group-open:rotate-90 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                          </svg>
+                          <span>Lihat juga: Sisa Tanggal Tersedia (Data Tanggal Utama dikurangi Day Off 1 & 2)</span>
+                        </span>
+                        <span id="availableAfterDayOffBadge" class="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-800">0 Tanggal</span>
+                      </summary>
+                      <div class="mt-3 space-y-2.5">
+                        <textarea
+                          id="khatibRemainingDatesOutput"
+                          readonly
+                          rows="3"
+                          class="w-full p-3.5 rounded-xl bg-white text-slate-700 font-mono text-xs sm:text-sm leading-relaxed border border-slate-300 focus:outline-none"
+                        ></textarea>
+                        <div class="flex justify-end">
+                          <button
+                            type="button"
+                            onclick="copyTextFromElement('khatibRemainingDatesOutput', 'Sisa tanggal tersedia berhasil disalin!')"
+                            class="text-xs px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition"
+                          >
+                            Copy Sisa Tanggal Tersedia
+                          </button>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          </div>
+
+          <!-- =================================================================== -->
+          <!-- SUB-VIEW B: RAMADHAN (MALAM 1 - 30) UNTUK KHATIB / DAI              -->
+          <!-- =================================================================== -->
+          <div id="khatibSubViewRamadhan" class="hidden space-y-8">
+
+            <!-- FITUR 1 RAMADHAN KHATIB: KONVERTER FORMAT ANGKA MALAM (1, 2, 3, ...) -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+              <div class="border-b border-slate-100 bg-amber-50/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-xl bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-sm">1</span>
+                  <div>
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">
+                      Ubah Format Malam Ramadhan ke Angka <code class="font-mono text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded border border-amber-200">1, 2, 3, ...</code>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      Masukkan teks malam dengan tanda pisah bebas (misal: <code class="font-mono">Malam 1; malam ke-3 | 5-8</code> atau baris baru) — otomatis menjadi <code class="font-mono">1, 3, 5, 6, 7, 8</code>.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 self-start sm:self-auto">
+                  <button type="button" onclick="loadRamadhanConverterSample()" class="text-xs px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold transition">
+                    Isi Contoh Format Campuran
+                  </button>
+                  <button type="button" onclick="clearRamadhanConverterInput()" class="text-xs px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition">
+                    Bersihkan
+                  </button>
+                </div>
+              </div>
+
+              <div class="p-5 space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <!-- Input Mentah Malam Ramadhan -->
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                      <label for="khatibRamadhanRawInput" class="text-xs font-semibold text-slate-700">
+                        Input Malam Ramadhan (Teks / Rentang / Pemisah Bebas)
+                      </label>
+                      <span class="text-[11px] text-slate-400">Hanya mengambil angka malam 1–30</span>
+                    </div>
+                    <textarea
+                      id="khatibRamadhanRawInput"
+                      rows="5"
+                      oninput="runRamadhanNightConverter()"
+                      placeholder="Masukkan atau paste daftar malam di sini...&#10;Contoh:&#10;Malam 1&#10;Malam 3; malam ke-5 | 7&#10;Rentang: 10-13&#10;21 / 23 / 25"
+                      class="w-full p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none leading-relaxed"
+                    ></textarea>
+                  </div>
+
+                  <!-- Hasil Format Angka Malam -->
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                      <label for="khatibRamadhanFormattedOutput" class="text-xs font-semibold text-slate-700">
+                        Hasil Generate (<code class="font-mono text-amber-700">1, 3, 5, ...</code>)
+                      </label>
+                      <span id="ramadhanConverterCountBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                        0 Malam Valid
+                      </span>
+                    </div>
+                    <textarea
+                      id="khatibRamadhanFormattedOutput"
+                      readonly
+                      rows="5"
+                      placeholder="Hasil konversi angka malam (1, 2, 3, ...) akan tampil otomatis di sini..."
+                      class="w-full p-3.5 rounded-xl bg-slate-900 text-amber-300 border border-slate-700 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 leading-relaxed selection:bg-amber-500 selection:text-slate-950"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <!-- Opsi & Tombol Aksi Konverter Malam Ramadhan -->
+                <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramConvExpandRange" checked onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
+                      <span>Ekspansi Rentang (misal <code class="font-mono">1-5</code> &rarr; <code class="font-mono">1, 2, 3, 4, 5</code>)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramConvSortToggle" onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
+                      <span>Urutkan Angka (1&rarr;30)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramConvDedupToggle" checked onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
+                      <span>Hapus Duplikat</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramConvTrailingComma" onchange="runRamadhanNightConverter()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300" />
+                      <span>Koma di akhir</span>
+                    </label>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onclick="sendRamadhanConvertedToTarget('master')"
+                      class="text-xs px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium transition"
+                    >
+                      Kirim ke Data Malam
+                    </button>
+                    <button
+                      type="button"
+                      onclick="sendRamadhanConvertedToTarget('dayoff1')"
+                      class="text-xs px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-medium transition"
+                    >
+                      + Kirim ke Day Off 1
+                    </button>
+                    <button
+                      type="button"
+                      onclick="copyTextFromElement('khatibRamadhanFormattedOutput', 'Hasil format angka malam Ramadhan berhasil disalin!')"
+                      class="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                      </svg>
+                      <span>Copy Hasil Angka</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- FITUR 2 RAMADHAN KHATIB: DATA MALAM & REKAP DAY OFF 1 SAJA -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+              <div class="border-b border-slate-100 bg-amber-50/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-xl bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-sm">2</span>
+                  <div>
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">
+                      Penginputan Malam Ramadhan & Rekap Day Off 1
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      Masukkan Daftar Malam Utama (1–30), lalu isi atau pilih <strong>Day Off 1</strong> untuk merekap malam libur/uzur Khatib.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700 font-medium">
+                    Data Malam: <strong id="ramMasterCountBadge" class="font-mono">30</strong>
+                  </span>
+                  <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-medium border border-amber-300">
+                    Day Off 1: <strong id="ramDayOff1CountBadge" class="font-mono">0</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div class="p-5 space-y-6">
+
+                <!-- 2A. Daftar Malam Utama (1 s/d 30) -->
+                <div class="space-y-2.5">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label for="khatibRamadhanMasterInput" class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <span>🌙 Daftar Malam Utama (Data Master Malam Ramadhan 1–30)</span>
+                      </label>
+                      <p class="text-xs text-slate-500">
+                        Data acuan malam Ramadhan (default: 1 sampai 30). Klik chip nomor malam di bawah untuk memilih langsung ke <strong>Day Off 1</strong>.
+                      </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 self-start sm:self-auto">
+                      <button type="button" onclick="setKhatibRamadhanMasterPreset(30)" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">
+                        Full 1–30
+                      </button>
+                      <button type="button" onclick="setKhatibRamadhanMasterPreset(29)" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">
+                        1–29 Malam
+                      </button>
+                      <button type="button" onclick="normalizeRamadhanTextareaInPlace('khatibRamadhanMasterInput')" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">
+                        Rapikan Angka
+                      </button>
+                      <button type="button" onclick="toggleRamadhanVisualPicker()" id="toggleRamadhanPickerBtn" class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-semibold transition">
+                        Sembunyikan Visual Malam
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    id="khatibRamadhanMasterInput"
+                    rows="2"
+                    oninput="processKhatibRamadhanDayOff()"
+                    placeholder="1, 2, 3, ..., 30"
+                    class="w-full p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none leading-relaxed bg-slate-50/50"
+                  ></textarea>
+
+                  <!-- Panel Pemilih Visual Malam Ramadhan (Langsung ke Day Off 1) -->
+                  <div id="ramadhanVisualPickerContainer" class="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/70 pb-3">
+                      <div>
+                        <h4 class="text-xs font-bold text-amber-950">Klik Nomor Malam di Bawah untuk Memasukkan / Menghapus dari Day Off 1:</h4>
+                        <p class="text-[11px] text-amber-800">Dikelompokkan berdasarkan 10 Malam Pertama, Kedua, dan Terakhir.</p>
+                      </div>
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 text-white text-xs font-semibold self-start sm:self-auto shadow-sm">
+                        <span>Target Klik: Day Off 1</span>
+                      </span>
+                    </div>
+                    <div id="ramadhanVisualPickerGrid" class="space-y-3">
+                      <!-- Di-render via JS per 10 malam -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2B. Kotak Inputan Day Off 1 Ramadhan (Tunggal) -->
+                <div class="rounded-2xl border-2 border-amber-200/90 bg-amber-50/30 p-4 space-y-3">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-bold">Day Off 1</span>
+                      <label for="khatibRamadhanDayOff1Input" class="text-xs sm:text-sm font-bold text-slate-800">Input Day Off 1 (Malam Libur / Uzur Ramadhan)</label>
+                    </div>
+                    <div class="flex items-center gap-1.5 self-start sm:self-auto">
+                      <button type="button" onclick="normalizeRamadhanTextareaInPlace('khatibRamadhanDayOff1Input')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 font-medium transition">
+                        Rapikan Angka
+                      </button>
+                      <button type="button" onclick="clearRamadhanDayOffBox()" class="text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-slate-200 font-medium transition">
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    id="khatibRamadhanDayOff1Input"
+                    rows="3"
+                    oninput="processKhatibRamadhanDayOff()"
+                    placeholder="Contoh: 1, 2, 3, 4, 5, 21, 23, 25, 27, 29 (atau ketik 1-5)"
+                    class="w-full p-3.5 rounded-xl border border-amber-300 bg-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none leading-relaxed"
+                  ></textarea>
+
+                  <div id="ramDayOff1ValidationInfo" class="text-[11px] text-slate-600 flex items-center justify-between">
+                    <span>Terdeteksi: <strong class="font-mono">0</strong> malam</span>
+                    <span class="text-emerald-700 font-medium">✓ Angka Malam (1–30)</span>
+                  </div>
+                  <div id="ramDayOff1OutDetails" class="hidden rounded-xl bg-amber-100/70 border border-amber-300 p-3 text-xs space-y-2 transition-all"></div>
+                </div>
+
+                <!-- 2C. Opsi Format Output Day Off Ramadhan -->
+                <div class="px-4 py-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="flex flex-wrap items-center gap-4 text-xs text-slate-700">
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramMergeDedup" checked onchange="processKhatibRamadhanDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                      <span>Hapus malam ganda</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramMergeSort" checked onchange="processKhatibRamadhanDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                      <span>Urutkan Angka (Kecil ke Besar)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramMergeFilterMaster" checked onchange="processKhatibRamadhanDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                      <span>Hanya malam yang ada di Data Malam Utama</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" id="ramMergeTrailingComma" onchange="processKhatibRamadhanDayOff()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                      <span>Koma di akhir (<code class="font-mono">1, 2, 3, </code>)</span>
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onclick="processKhatibRamadhanDayOff(true)"
+                    class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 shrink-0"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                    <span>Generate Day Off Ramadhan</span>
+                  </button>
+                </div>
+
+                <!-- 2D. Hasil Generate: Day Off 1 Ramadhan -->
+                <div id="khatibRamadhanOutputCard" class="rounded-2xl border-2 border-emerald-500 bg-emerald-50/30 overflow-hidden transition-all">
+                  <div class="bg-emerald-600 text-white px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-5 h-5 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <h4 class="font-bold text-sm sm:text-base">Hasil Generate Day Off Ramadhan (Day Off 1)</h4>
+                    </div>
+                    <span id="ramMergedDayOffBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-800 text-emerald-100 self-start sm:self-auto">
+                      10 Malam Day Off
+                    </span>
+                  </div>
+
+                  <div class="p-5 space-y-4">
+                    <p class="text-xs text-slate-600">
+                      Hasil rekap otomatis dari <strong>Day Off 1</strong> Ramadhan berupa <strong>angka malam saja</strong> (<code class="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-emerald-700">1, 2, 3, ...</code>):
+                    </p>
+
+                    <textarea
+                      id="khatibRamadhanMergedOutput"
+                      readonly
+                      rows="3"
+                      placeholder="Hasil angka malam Day Off 1 akan muncul di sini..."
+                      class="w-full p-4 rounded-xl bg-slate-900 text-emerald-300 font-mono text-sm sm:text-base leading-relaxed border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 selection:bg-emerald-600 selection:text-white"
+                    ></textarea>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>Format angka bersih dipisahkan koma dan siap di-copy.</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onclick="copyTextFromElement('khatibRamadhanMergedOutput', 'Hasil Day Off Ramadhan berhasil disalin!')"
+                        class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 active:bg-black text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                      >
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Copy Day Off</span>
+                      </button>
+                    </div>
+
+                    <!-- Accordion: Sisa Malam Tersedia (Siap Dijadwalkan) -->
+                    <div class="pt-3 border-t border-emerald-200/70">
+                      <details class="group">
+                        <summary class="cursor-pointer list-none flex items-center justify-between text-xs font-semibold text-emerald-900 hover:text-emerald-700 py-1">
+                          <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 transition-transform group-open:rotate-90 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            <span>Lihat juga: Sisa Malam Tersedia / Siap Dijadwalkan (Data Malam dikurangi Day Off 1)</span>
+                          </span>
+                          <span id="ramAvailableAfterDayOffBadge" class="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-800">20 Malam</span>
+                        </summary>
+                        <div class="mt-3 space-y-2.5">
+                          <textarea
+                            id="khatibRamadhanRemainingOutput"
+                            readonly
+                            rows="2"
+                            class="w-full p-3.5 rounded-xl bg-white text-slate-700 font-mono text-xs sm:text-sm leading-relaxed border border-slate-300 focus:outline-none"
+                          ></textarea>
+                          <div class="flex justify-end">
+                            <button
+                              type="button"
+                              onclick="copyTextFromElement('khatibRamadhanRemainingOutput', 'Sisa malam Ramadhan tersedia berhasil disalin!')"
+                              class="text-xs px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition"
+                            >
+                              Copy Sisa Malam Tersedia
+                            </button>
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+          </div>
+
+        </main>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /**
+     * STATE GLOBAL APLIKASI
+     * Menyimpan menu sidebar aktif ('masjid' | 'khatib'), status visibilitas sidebar,
+     * state terisolasi untuk Masjid ('jumat', 'ramadhan', 'manual'),
+     * serta state untuk Khatib/Dai ('jumat' | 'ramadhan').
+     */
+    const appState = {
+      activeSidebar: 'masjid',       // 'masjid' | 'khatib'
+      sidebarVisible: true,          // true = tampil, false = sembunyi
+      activeTab: 'jumat',            // 'jumat' | 'ramadhan' | 'manual' (Menu Masjid)
+      khatibSubTab: 'jumat',         // 'jumat' | 'ramadhan' (Menu Khatib/Dai)
+      jumat: [],                     // Array of { value: 'YYYY-MM-DD', checked: boolean }
+      ramadhan: [],                  // Array of { night: number, checked: boolean }
+      manual: [],                    // Array of { value: string, checked: boolean }
+      khatibPickerTarget: 1,         // 1 = Day Off 1, 2 = Day Off 2 (Jumat)
+      khatibPickerOpen: false,
+      khatibRamadhanPickerOpen: true,
+      outDetailsOpen: {
+        dayOff1: false,
+        dayOff2: false,
+        ramDayOff1: false
+      }
+    };
+
+    let toastTimeout = null;
+
+    // Nama Bulan Bahasa Indonesia
+    const INDONESIAN_MONTHS = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    // Map Nama Bulan ke Angka Bulan (01 - 12) untuk parser konverter tanggal
+    const MONTH_NAME_MAP = {
+      jan: '01', januari: '01', january: '01',
+      feb: '02', februari: '02', february: '02', pebruari: '02',
+      mar: '03', maret: '03', march: '03',
+      apr: '04', april: '04',
+      mei: '05', may: '05',
+      jun: '06', juni: '06', june: '06',
+      jul: '07', juli: '07', july: '07',
+      agu: '08', agustus: '08', aug: '08', august: '08',
+      sep: '09', sept: '09', september: '09',
+      okt: '10', oktober: '10', oct: '10', october: '10',
+      nov: '11', november: '11', nop: '11', nopember: '11',
+      des: '12', desember: '12', dec: '12', december: '12'
+    };
+
+    // Data Default Khatib/Dai sesuai contoh dari user (Jumat)
+    const DEFAULT_KHATIB_MASTER_DATES = `2027-01-01, 2027-01-08, 2027-01-15,
+2027-01-22, 2027-01-29, 2027-02-05, 2027-02-12, 2027-02-19, 2027-02-26,
+2027-03-05, 2027-03-12, 2027-03-19, 2027-03-26, 2027-04-02, 2027-04-09, 2027-04-16,
+2027-04-23, 2027-04-30, 2027-05-07, 2027-05-14, 2027-05-21, 2027-05-28, 2027-06-04, 2027-06-11, 2027-06-18, 2027-06-25, 2027-07-02, 2027-07-09, 2027-07-16, 2027-07-23, 2027-07-30, 2027-08-06, 2027-08-13, 2027-08-20, 2027-08-27,
+2027-09-03, 2027-09-10, 2027-09-17, 2027-09-24, 2027-10-01, 2027-10-08, 2027-10-15, 2027-10-22, 2027-10-29, 2027-11-05, 2027-11-12, 2027-11-19, 2027-11-26, 2027-12-03, 2027-12-10, 2027-12-17, 2027-12-24, 2027-12-31`;
+
+    const DEFAULT_KHATIB_DAYOFF_1 = `2027-02-26,
+2027-03-05, 2027-03-12, 2027-03-19, 2027-03-26`;
+
+    const DEFAULT_KHATIB_DAYOFF_2 = `2027-10-08, 2027-10-15, 2027-10-22, 2027-10-29, 2027-11-05`;
+
+    const DEFAULT_CONVERTER_SAMPLE = `2027-01-01
+2027-01-08; 2027/01/15
+22-01-2027 | 29/01/2027
+5 Februari 2027`;
+
+    // Data Default Khatib/Dai untuk versi Ramadhan (Malam 1 - 30, Cukup Day Off 1 Saja)
+    const DEFAULT_KHATIB_RAMADHAN_MASTER = Array.from({ length: 30 }, (_, i) => i + 1).join(', ');
+    const DEFAULT_KHATIB_RAMADHAN_DAYOFF_1 = `1, 2, 3, 4, 5, 21, 23, 25, 27, 29`;
+    const DEFAULT_RAMADHAN_CONVERTER_SAMPLE = `Malam 1\nMalam 3; malam ke-5 | 7\nRentang malam: 10-12\n21 / 23 / 25`;
+
+    // ==================== TOGGLE SEMBUNYIKAN & TAMPILKAN SIDEBAR ====================
+
+    function toggleSidebar(forceShow) {
+      if (typeof forceShow === 'boolean') {
+        appState.sidebarVisible = forceShow;
+      } else {
+        appState.sidebarVisible = !appState.sidebarVisible;
+      }
+
+      const desktopSidebar = document.getElementById('desktopSidebar');
+      const mobileTopBar = document.getElementById('mobileTopBar');
+      const mainWrapper = document.getElementById('mainContentWrapper');
+      const floatingBtn = document.getElementById('showSidebarFloatingBtn');
+
+      if (appState.sidebarVisible) {
+        desktopSidebar.classList.remove('-translate-x-full');
+        desktopSidebar.classList.add('translate-x-0');
+        mobileTopBar.classList.remove('hidden');
+        mainWrapper.classList.add('lg:pl-72');
+        floatingBtn.classList.add('hidden');
+        floatingBtn.classList.remove('flex');
+      } else {
+        desktopSidebar.classList.remove('translate-x-0');
+        desktopSidebar.classList.add('-translate-x-full');
+        mobileTopBar.classList.add('hidden');
+        mainWrapper.classList.remove('lg:pl-72');
+        floatingBtn.classList.remove('hidden');
+        floatingBtn.classList.add('flex');
+      }
+    }
+
+    // ==================== NAVIGASI SIDEBAR UTAMA ====================
+
+    function switchSidebarMenu(menuName) {
+      appState.activeSidebar = menuName;
+
+      const viewMasjid = document.getElementById('viewMasjid');
+      const viewKhatib = document.getElementById('viewKhatib');
+      const sideNavMasjid = document.getElementById('sideNavMasjid');
+      const sideNavKhatib = document.getElementById('sideNavKhatib');
+      const mobileNavMasjid = document.getElementById('mobileNavMasjid');
+      const mobileNavKhatib = document.getElementById('mobileNavKhatib');
+      const mobileSubtitle = document.getElementById('mobileSubtitle');
+
+      const activeSideClass = "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left transition bg-emerald-600 text-white shadow-lg shadow-emerald-900/40 font-semibold";
+      const inactiveSideClass = "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left transition text-slate-300 hover:bg-slate-800/70 hover:text-white font-medium";
+
+      const activeMobileClass = "px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-sm transition";
+      const inactiveMobileClass = "px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white transition";
+
+      if (menuName === 'khatib') {
+        viewMasjid.classList.add('hidden');
+        viewKhatib.classList.remove('hidden');
+        sideNavMasjid.className = inactiveSideClass;
+        sideNavKhatib.className = activeSideClass;
+        mobileNavMasjid.className = inactiveMobileClass;
+        mobileNavKhatib.className = activeMobileClass;
+        mobileSubtitle.textContent = 'Menu Khatib / Dai';
+      } else {
+        viewKhatib.classList.add('hidden');
+        viewMasjid.classList.remove('hidden');
+        sideNavMasjid.className = activeSideClass;
+        sideNavKhatib.className = inactiveSideClass;
+        mobileNavMasjid.className = activeMobileClass;
+        mobileNavKhatib.className = inactiveMobileClass;
+        mobileSubtitle.textContent = 'Menu Masjid';
+      }
+    }
+
+    function switchKhatibSubTab(subTab) {
+      appState.khatibSubTab = subTab;
+
+      const viewJumat = document.getElementById('khatibSubViewJumat');
+      const viewRamadhan = document.getElementById('khatibSubViewRamadhan');
+      const btnJumat = document.getElementById('khatibSubTabJumatBtn');
+      const btnRamadhan = document.getElementById('khatibSubTabRamadhanBtn');
+      const resetLabel = document.getElementById('resetKhatibBtnLabel');
+
+      const activeBtnClass = "px-4 py-2 rounded-lg bg-emerald-500 text-white shadow-sm transition flex items-center gap-2";
+      const inactiveBtnClass = "px-4 py-2 rounded-lg text-emerald-100 hover:text-white hover:bg-white/10 transition flex items-center gap-2";
+
+      if (subTab === 'ramadhan') {
+        viewJumat.classList.add('hidden');
+        viewRamadhan.classList.remove('hidden');
+        btnJumat.className = inactiveBtnClass;
+        btnRamadhan.className = activeBtnClass;
+        resetLabel.textContent = 'Reset Semua Data';
+      } else {
+        viewRamadhan.classList.add('hidden');
+        viewJumat.classList.remove('hidden');
+        btnJumat.className = activeBtnClass;
+        btnRamadhan.className = inactiveBtnClass;
+        resetLabel.textContent = 'Reset Semua Data';
+      }
+    }
+
+    // ==================== PARSER & KONVERTER TANGGAL KHATIB / DAI ====================
+
+    /**
+     * Mengekstrak seluruh tanggal dari teks mentah dengan pemisah apa pun
+     * (koma, titik koma, baris baru, spasi, pipa |, garis miring /, maupun nama bulan)
+     * dan mengubahnya menjadi array string 'YYYY-MM-DD'.
+     */
+    function extractAndNormalizeDates(rawText) {
+      if (!rawText || typeof rawText !== 'string') return [];
+
+      let text = rawText;
+
+      // 1. Konversi tanggal dengan nama bulan (contoh: "5 Februari 2027" atau "2027 Februari 05")
+      const monthNamesPattern = Object.keys(MONTH_NAME_MAP).join('|');
+      const regexDMYMonthName = new RegExp(`\\b(\\d{1,2})[\\s\\-\\/]+(${monthNamesPattern})[\\s\\-\\/,]+(\\d{4})\\b`, 'gi');
+      text = text.replace(regexDMYMonthName, (_, d, mName, y) => {
+        const mm = MONTH_NAME_MAP[mName.toLowerCase()];
+        const dd = String(d).padStart(2, '0');
+        return ` ${y}-${mm}-${dd} `;
+      });
+
+      const results = [];
+      // 2. Tangkap pola angka tanggal: YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD, atau DD-MM-YYYY, DD/MM/YYYY
+      const dateTokenRegex = /\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b|\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})\b/g;
+
+      let match;
+      while ((match = dateTokenRegex.exec(text)) !== null) {
+        let yyyy, mm, dd;
+        if (match[1]) {
+          yyyy = parseInt(match[1], 10);
+          mm = parseInt(match[2], 10);
+          dd = parseInt(match[3], 10);
+        } else {
+          dd = parseInt(match[4], 10);
+          mm = parseInt(match[5], 10);
+          yyyy = parseInt(match[6], 10);
+        }
+
+        // Jika bulan > 12 dan hari <= 12 (format MM/DD/YYYY), tukar otomatis
+        if (mm > 12 && dd <= 12) {
+          const temp = mm;
+          mm = dd;
+          dd = temp;
+        }
+
+        if (yyyy >= 1900 && yyyy <= 2100 && mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
+          const formatted = `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+          results.push(formatted);
+        }
+      }
+
+      return results;
+    }
+
+    /**
+     * Mengekstrak nomor malam Ramadhan (1 s/d 30) dari teks bebas.
+     * Mendukung: "Malam 1; Malam ke-3 | 5-8, 21 / 23"
+     */
+    function extractRamadhanNights(rawText, expandRanges = true) {
+      if (!rawText || typeof rawText !== 'string') return [];
+
+      let processed = rawText;
+
+      // Ekspansi rentang angka a-b (contoh: 1-5 atau 10 s/d 13)
+      if (expandRanges) {
+        processed = processed.replace(/\b(\d{1,2})\s*(?:\-|–|s\/d|sd|sampai)\s*(\d{1,2})\b/gi, (full, startStr, endStr) => {
+          const s = parseInt(startStr, 10);
+          const e = parseInt(endStr, 10);
+          if (s >= 1 && s <= 30 && e >= 1 && e <= 30) {
+            const step = s <= e ? 1 : -1;
+            const expanded = [];
+            for (let i = s; step > 0 ? i <= e : i >= e; i += step) {
+              expanded.push(i);
+            }
+            return ' ' + expanded.join(' ') + ' ';
+          }
+          return full;
+        });
+      }
+
+      const matches = processed.match(/\b\d{1,2}\b/g);
+      if (!matches) return [];
+
+      const nights = [];
+      matches.forEach(token => {
+        const num = parseInt(token, 10);
+        if (num >= 1 && num <= 30) {
+          nights.push(num);
+        }
+      });
+
+      return nights;
+    }
+
+    function initKhatibDefaults() {
+      // Default untuk Sub-Tab Jumat dikosongkan
+      document.getElementById('khatibRawFormatInput').value = '';
+      document.getElementById('khatibMasterDatesInput').value = '';
+      document.getElementById('khatibDayOff1Input').value = '';
+      document.getElementById('khatibDayOff2Input').value = '';
+
+      // Default untuk Sub-Tab Ramadhan dikosongkan
+      document.getElementById('khatibRamadhanRawInput').value = '';
+      document.getElementById('khatibRamadhanMasterInput').value = '';
+      document.getElementById('khatibRamadhanDayOff1Input').value = '';
+
+      runDateConverter();
+      processKhatibDayOff(false);
+      runRamadhanNightConverter();
+      processKhatibRamadhanDayOff(false);
+    }
+
+    function resetKhatibActiveSubTabDemo() {
+      document.getElementById('khatibRawFormatInput').value = '';
+      document.getElementById('khatibMasterDatesInput').value = '';
+      document.getElementById('khatibDayOff1Input').value = '';
+      document.getElementById('khatibDayOff2Input').value = '';
+
+      document.getElementById('khatibRamadhanRawInput').value = '';
+      document.getElementById('khatibRamadhanMasterInput').value = '';
+      document.getElementById('khatibRamadhanDayOff1Input').value = '';
+
+      appState.outDetailsOpen.dayOff1 = false;
+      appState.outDetailsOpen.dayOff2 = false;
+      appState.outDetailsOpen.ramDayOff1 = false;
+
+      runDateConverter();
+      processKhatibDayOff(false);
+      runRamadhanNightConverter();
+      processKhatibRamadhanDayOff(false);
+
+      showToast('Semua data dan inputan Khatib/Dai berhasil dikosongkan!');
+    }
+
+    // --- Fitur Sub-Tab Ramadhan pada Menu Khatib/Dai ---
+
+    function runRamadhanNightConverter() {
+      const rawInput = document.getElementById('khatibRamadhanRawInput').value;
+      const expandRange = document.getElementById('ramConvExpandRange').checked;
+      const sortAsc = document.getElementById('ramConvSortToggle').checked;
+      const dedup = document.getElementById('ramConvDedupToggle').checked;
+      const trailingComma = document.getElementById('ramConvTrailingComma').checked;
+
+      let nights = extractRamadhanNights(rawInput, expandRange);
+
+      if (dedup) {
+        nights = Array.from(new Set(nights));
+      }
+      if (sortAsc) {
+        nights.sort((a, b) => a - b);
+      }
+
+      const outputEl = document.getElementById('khatibRamadhanFormattedOutput');
+      const badgeEl = document.getElementById('ramadhanConverterCountBadge');
+
+      badgeEl.textContent = `${nights.length} Malam Valid`;
+
+      if (nights.length === 0) {
+        outputEl.value = '';
+        return;
+      }
+
+      let formatted = nights.join(', ');
+      if (trailingComma) {
+        formatted += ', ';
+      }
+      outputEl.value = formatted;
+    }
+
+    function loadRamadhanConverterSample() {
+      document.getElementById('khatibRamadhanRawInput').value = DEFAULT_RAMADHAN_CONVERTER_SAMPLE;
+      runRamadhanNightConverter();
+      showToast('Contoh format malam campuran berhasil dimuat');
+    }
+
+    function clearRamadhanConverterInput() {
+      document.getElementById('khatibRamadhanRawInput').value = '';
+      runRamadhanNightConverter();
+    }
+
+    function sendRamadhanConvertedToTarget(target) {
+      const converted = document.getElementById('khatibRamadhanFormattedOutput').value.trim();
+      if (!converted) {
+        showToast('Belum ada hasil konversi angka malam untuk dikirim', true);
+        return;
+      }
+
+      if (target === 'master') {
+        document.getElementById('khatibRamadhanMasterInput').value = converted;
+        processKhatibRamadhanDayOff(false);
+        showToast('Berhasil dikirim ke Daftar Malam Utama');
+      } else if (target === 'dayoff1') {
+        const el = document.getElementById('khatibRamadhanDayOff1Input');
+        el.value = el.value.trim() ? `${el.value.trim()}, ${converted}` : converted;
+        normalizeRamadhanTextareaInPlace('khatibRamadhanDayOff1Input');
+        processKhatibRamadhanDayOff(false);
+        showToast('Berhasil ditambahkan ke Day Off 1 Ramadhan');
+      }
+    }
+
+    function setKhatibRamadhanMasterPreset(maxNight) {
+      const list = Array.from({ length: maxNight }, (_, i) => i + 1);
+      document.getElementById('khatibRamadhanMasterInput').value = list.join(', ');
+      processKhatibRamadhanDayOff(false);
+      showToast(`Daftar Malam Utama diatur ke Malam 1 s/d Malam ${maxNight}`);
+    }
+
+    function normalizeRamadhanTextareaInPlace(textareaId) {
+      const el = document.getElementById(textareaId);
+      if (!el) return;
+      const extracted = Array.from(new Set(extractRamadhanNights(el.value, true)));
+      if (extracted.length === 0) {
+        showToast('Tidak ditemukan nomor malam (1–30) untuk dirapikan', true);
+        return;
+      }
+      el.value = extracted.join(', ');
+      processKhatibRamadhanDayOff(false);
+      showToast(`Format angka malam dirapikan (${extracted.length} malam)`);
+    }
+
+    function clearRamadhanDayOffBox() {
+      document.getElementById('khatibRamadhanDayOff1Input').value = '';
+      processKhatibRamadhanDayOff(false);
+      showToast('Input Day Off 1 Ramadhan dikosongkan');
+    }
+
+    function toggleRamadhanVisualPicker() {
+      appState.khatibRamadhanPickerOpen = !appState.khatibRamadhanPickerOpen;
+      const container = document.getElementById('ramadhanVisualPickerContainer');
+      const btn = document.getElementById('toggleRamadhanPickerBtn');
+      if (appState.khatibRamadhanPickerOpen) {
+        container.classList.remove('hidden');
+        btn.textContent = 'Sembunyikan Visual Malam';
+        renderRamadhanVisualPickerChips();
+      } else {
+        container.classList.add('hidden');
+        btn.textContent = 'Pilih Visual Malam (1–30)';
+      }
+    }
+
+    function toggleNightInRamadhanDayOffFromPicker(nightNum) {
+      const el = document.getElementById('khatibRamadhanDayOff1Input');
+      const currentNights = extractRamadhanNights(el.value, true);
+      const idx = currentNights.indexOf(nightNum);
+
+      if (idx >= 0) {
+        currentNights.splice(idx, 1);
+      } else {
+        currentNights.push(nightNum);
+      }
+
+      el.value = currentNights.join(', ');
+      processKhatibRamadhanDayOff(false);
+    }
+
+    function renderRamadhanVisualPickerChips() {
+      const grid = document.getElementById('ramadhanVisualPickerGrid');
+      if (!grid) return;
+
+      const masterNights = Array.from(new Set(extractRamadhanNights(document.getElementById('khatibRamadhanMasterInput').value, true)));
+      const dayOff1Set = new Set(extractRamadhanNights(document.getElementById('khatibRamadhanDayOff1Input').value, true));
+
+      if (masterNights.length === 0) {
+        grid.innerHTML = `<span class="text-xs text-slate-400 py-2">Daftar Malam Utama masih kosong.</span>`;
+        return;
+      }
+
+      const phases = [
+        { title: '🌙 10 Malam Pertama (1–10)', nights: masterNights.filter(n => n >= 1 && n <= 10) },
+        { title: '🌙 10 Malam Kedua (11–20)', nights: masterNights.filter(n => n >= 11 && n <= 20) },
+        { title: '🌙 10 Malam Terakhir (21–30)', nights: masterNights.filter(n => n >= 21 && n <= 30) }
+      ].filter(p => p.nights.length > 0);
+
+      grid.innerHTML = phases.map(phase => {
+        const chipsHtml = phase.nights.map(n => {
+          const in1 = dayOff1Set.has(n);
+
+          const badgeClass = in1
+            ? 'bg-amber-500 border-amber-600 text-white font-semibold'
+            : 'bg-white border-slate-300 text-slate-700 hover:border-amber-500';
+          const tagLabel = in1 ? ' (Day Off 1)' : '';
+
+          return `
+            <button
+              type="button"
+              onclick="toggleNightInRamadhanDayOffFromPicker(${n})"
+              class="chip-date text-xs font-mono px-2.5 py-1.5 rounded-lg border shadow-sm ${badgeClass}"
+            >
+              Malam ${n}${tagLabel}
+            </button>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-white/80 rounded-xl p-3 border border-amber-200/70 space-y-2">
+            <div class="text-[11px] font-bold text-slate-700">${phase.title}</div>
+            <div class="flex flex-wrap gap-1.5">${chipsHtml}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function processKhatibRamadhanDayOff(scrollToOutput = false) {
+      const masterRaw = document.getElementById('khatibRamadhanMasterInput').value;
+      const dayOff1Raw = document.getElementById('khatibRamadhanDayOff1Input').value;
+
+      const masterNights = Array.from(new Set(extractRamadhanNights(masterRaw, true)));
+      const dayOff1Nights = extractRamadhanNights(dayOff1Raw, true);
+
+      const masterSet = new Set(masterNights);
+
+      document.getElementById('ramMasterCountBadge').textContent = masterNights.length;
+      document.getElementById('ramDayOff1CountBadge').textContent = dayOff1Nights.length;
+
+      const out1 = masterNights.length > 0 ? dayOff1Nights.filter(n => !masterSet.has(n)) : [];
+      const uniqueOut1 = Array.from(new Set(out1));
+
+      const info1 = document.getElementById('ramDayOff1ValidationInfo');
+      const detailsEl1 = document.getElementById('ramDayOff1OutDetails');
+
+      if (uniqueOut1.length > 0) {
+        info1.innerHTML = `
+          <span>Terdeteksi: <strong class="font-mono">${dayOff1Nights.length}</strong> malam</span>
+          <button
+            type="button"
+            onclick="toggleOutDetails('ramDayOff1')"
+            class="text-amber-800 hover:text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2.5 py-0.5 rounded-lg border border-amber-300 font-semibold transition inline-flex items-center gap-1 cursor-pointer shadow-sm"
+            title="Klik untuk melihat malam di luar Data Utama"
+          >
+            <span>⚠️ ${uniqueOut1.length} malam di luar Data Utama</span>
+            <span class="underline ml-0.5">${appState.outDetailsOpen.ramDayOff1 ? '(Tutup)' : '(Lihat)'}</span>
+          </button>
+        `;
+        renderOutDetailsBox('ramDayOff1', uniqueOut1);
+      } else {
+        appState.outDetailsOpen.ramDayOff1 = false;
+        if (detailsEl1) detailsEl1.classList.add('hidden');
+        info1.innerHTML = `<span>Terdeteksi: <strong class="font-mono">${dayOff1Nights.length}</strong> malam</span><span class="text-emerald-700 font-medium">✓ Sesuai Data Malam Utama</span>`;
+      }
+
+      // Ambil dari Day Off 1 Ramadhan saja
+      let resultNights = [...dayOff1Nights];
+
+      const dedup = document.getElementById('ramMergeDedup').checked;
+      const sortAsc = document.getElementById('ramMergeSort').checked;
+      const filterMaster = document.getElementById('ramMergeFilterMaster').checked;
+      const trailingComma = document.getElementById('ramMergeTrailingComma').checked;
+
+      if (filterMaster && masterNights.length > 0) {
+        resultNights = resultNights.filter(n => masterSet.has(n));
+      }
+      if (dedup) {
+        resultNights = Array.from(new Set(resultNights));
+      }
+      if (sortAsc) {
+        resultNights.sort((a, b) => a - b);
+      }
+
+      const mergedOutputEl = document.getElementById('khatibRamadhanMergedOutput');
+      const mergedBadgeEl = document.getElementById('ramMergedDayOffBadge');
+
+      mergedBadgeEl.textContent = `${resultNights.length} Malam Day Off`;
+
+      if (resultNights.length === 0) {
+        mergedOutputEl.value = '';
+      } else {
+        let formattedMerged = resultNights.join(', ');
+        if (trailingComma) formattedMerged += ', ';
+        mergedOutputEl.value = formattedMerged;
+      }
+
+      // Hitung Sisa Malam Tersedia (Data Malam Utama dikurangi Day Off 1)
+      const dayOffSet = new Set(resultNights);
+      const remainingNights = masterNights.filter(n => !dayOffSet.has(n));
+      const remainingOutputEl = document.getElementById('khatibRamadhanRemainingOutput');
+      const remainingBadgeEl = document.getElementById('ramAvailableAfterDayOffBadge');
+
+      remainingBadgeEl.textContent = `${remainingNights.length} Malam`;
+      remainingOutputEl.value = remainingNights.length > 0
+        ? (trailingComma ? `${remainingNights.join(', ')}, ` : remainingNights.join(', '))
+        : '';
+
+      if (appState.khatibRamadhanPickerOpen) {
+        renderRamadhanVisualPickerChips();
+      }
+
+      if (scrollToOutput) {
+        const card = document.getElementById('khatibRamadhanOutputCard');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        card.classList.add('ring-4', 'ring-emerald-300');
+        setTimeout(() => card.classList.remove('ring-4', 'ring-emerald-300'), 800);
+        showToast('Rekap Day Off Ramadhan berhasil digenerate!');
+      }
+    }
+
+    // --- Fitur 1 Khatib: Konverter Format Tanggal ---
+
+    function runDateConverter() {
+      const rawInput = document.getElementById('khatibRawFormatInput').value;
+      const sortChrono = document.getElementById('convSortToggle').checked;
+      const dedup = document.getElementById('convDedupToggle').checked;
+      const trailingComma = document.getElementById('convTrailingComma').checked;
+
+      let dates = extractAndNormalizeDates(rawInput);
+
+      if (dedup) {
+        dates = Array.from(new Set(dates));
+      }
+      if (sortChrono) {
+        dates.sort((a, b) => a.localeCompare(b));
+      }
+
+      const outputEl = document.getElementById('khatibFormattedOutput');
+      const badgeEl = document.getElementById('converterCountBadge');
+
+      badgeEl.textContent = `${dates.length} Tanggal Valid`;
+
+      if (dates.length === 0) {
+        outputEl.value = '';
+        return;
+      }
+
+      let formatted = dates.join(', ');
+      if (trailingComma) {
+        formatted += ', ';
+      }
+      outputEl.value = formatted;
+    }
+
+    function loadConverterSample() {
+      document.getElementById('khatibRawFormatInput').value = DEFAULT_CONVERTER_SAMPLE;
+      runDateConverter();
+      showToast('Contoh tanggal tanda pisah campuran dimuat');
+    }
+
+    function clearConverterInput() {
+      document.getElementById('khatibRawFormatInput').value = '';
+      runDateConverter();
+    }
+
+    function sendConvertedToTarget(target) {
+      const converted = document.getElementById('khatibFormattedOutput').value.trim();
+      if (!converted) {
+        showToast('Belum ada hasil tanggal yang valid untuk dikirim', true);
+        return;
+      }
+
+      if (target === 'master') {
+        document.getElementById('khatibMasterDatesInput').value = converted;
+        processKhatibDayOff(false);
+        showToast('Berhasil dikirim ke Daftar Tanggal Utama');
+      } else if (target === 'dayoff1') {
+        const el = document.getElementById('khatibDayOff1Input');
+        el.value = el.value.trim() ? `${el.value.trim()}, ${converted}` : converted;
+        normalizeTextareaInPlace('khatibDayOff1Input');
+        processKhatibDayOff(false);
+        showToast('Berhasil ditambahkan ke Day Off 1');
+      } else if (target === 'dayoff2') {
+        const el = document.getElementById('khatibDayOff2Input');
+        el.value = el.value.trim() ? `${el.value.trim()}, ${converted}` : converted;
+        normalizeTextareaInPlace('khatibDayOff2Input');
+        processKhatibDayOff(false);
+        showToast('Berhasil ditambahkan ke Day Off 2');
+      }
+    }
+
+    // --- Fitur 2 Khatib: Data Tanggal & Gabungan Day Off 1 + Day Off 2 ---
+
+    function normalizeTextareaInPlace(textareaId) {
+      const el = document.getElementById(textareaId);
+      if (!el) return;
+      const extracted = Array.from(new Set(extractAndNormalizeDates(el.value)));
+      if (extracted.length === 0) {
+        showToast('Tidak ditemukan tanggal valid untuk dirapikan', true);
+        return;
+      }
+      el.value = extracted.join(', ');
+      processKhatibDayOff(false);
+      showToast(`Format berhasil dirapikan (${extracted.length} tanggal)`);
+    }
+
+    function clearDayOffBox(num) {
+      if (num === 1) {
+        document.getElementById('khatibDayOff1Input').value = '';
+      } else {
+        document.getElementById('khatibDayOff2Input').value = '';
+      }
+      processKhatibDayOff(false);
+      showToast(`Inputan Day Off ${num} dikosongkan`);
+    }
+
+    function toggleVisualPicker() {
+      appState.khatibPickerOpen = !appState.khatibPickerOpen;
+      const container = document.getElementById('visualPickerContainer');
+      const btn = document.getElementById('togglePickerBtn');
+      if (appState.khatibPickerOpen) {
+        container.classList.remove('hidden');
+        btn.textContent = 'Sembunyikan Klik Visual Tanggal';
+        renderVisualPickerChips();
+      } else {
+        container.classList.add('hidden');
+        btn.textContent = 'Tampilkan Klik Visual Tanggal';
+      }
+    }
+
+    function setPickerTarget(targetNum) {
+      appState.khatibPickerTarget = targetNum;
+      const btn1 = document.getElementById('pickerTargetBtn1');
+      const btn2 = document.getElementById('pickerTargetBtn2');
+      if (targetNum === 1) {
+        btn1.className = "px-3 py-1.5 rounded-lg bg-amber-500 text-white shadow-sm transition";
+        btn2.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+      } else {
+        btn1.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        btn2.className = "px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition";
+      }
+    }
+
+    function toggleDateInDayOffFromPicker(dateStr) {
+      const targetId = appState.khatibPickerTarget === 1 ? 'khatibDayOff1Input' : 'khatibDayOff2Input';
+      const el = document.getElementById(targetId);
+      const currentDates = extractAndNormalizeDates(el.value);
+      const idx = currentDates.indexOf(dateStr);
+
+      if (idx >= 0) {
+        currentDates.splice(idx, 1);
+      } else {
+        currentDates.push(dateStr);
+      }
+
+      el.value = currentDates.join(', ');
+      processKhatibDayOff(false);
+    }
+
+    function renderVisualPickerChips() {
+      const grid = document.getElementById('visualPickerGrid');
+      if (!grid) return;
+
+      const masterDates = Array.from(new Set(extractAndNormalizeDates(document.getElementById('khatibMasterDatesInput').value)));
+      const dayOff1Set = new Set(extractAndNormalizeDates(document.getElementById('khatibDayOff1Input').value));
+      const dayOff2Set = new Set(extractAndNormalizeDates(document.getElementById('khatibDayOff2Input').value));
+
+      if (masterDates.length === 0) {
+        grid.innerHTML = `<span class="text-xs text-slate-400 py-2">Daftar Tanggal Utama masih kosong.</span>`;
+        return;
+      }
+
+      grid.innerHTML = masterDates.map(d => {
+        const in1 = dayOff1Set.has(d);
+        const in2 = dayOff2Set.has(d);
+
+        let badgeClass = 'bg-white border-slate-300 text-slate-700 hover:border-emerald-400';
+        let tagLabel = '';
+
+        if (in1 && in2) {
+          badgeClass = 'bg-emerald-700 border-emerald-800 text-white font-semibold';
+          tagLabel = ' (DO 1&2)';
+        } else if (in1) {
+          badgeClass = 'bg-amber-500 border-amber-600 text-white font-semibold';
+          tagLabel = ' (DO 1)';
+        } else if (in2) {
+          badgeClass = 'bg-indigo-600 border-indigo-700 text-white font-semibold';
+          tagLabel = ' (DO 2)';
+        }
+
+        return `
+          <button
+            type="button"
+            onclick="toggleDateInDayOffFromPicker('${d}')"
+            class="chip-date text-xs font-mono px-2.5 py-1.5 rounded-lg border shadow-sm ${badgeClass}"
+          >
+            ${d}${tagLabel}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function processKhatibDayOff(scrollToOutput = false) {
+      const masterRaw = document.getElementById('khatibMasterDatesInput').value;
+      const dayOff1Raw = document.getElementById('khatibDayOff1Input').value;
+      const dayOff2Raw = document.getElementById('khatibDayOff2Input').value;
+
+      const masterDates = Array.from(new Set(extractAndNormalizeDates(masterRaw)));
+      const dayOff1Dates = extractAndNormalizeDates(dayOff1Raw);
+      const dayOff2Dates = extractAndNormalizeDates(dayOff2Raw);
+
+      const masterSet = new Set(masterDates);
+
+      document.getElementById('masterCountBadge').textContent = masterDates.length;
+      document.getElementById('dayOff1CountBadge').textContent = dayOff1Dates.length;
+      document.getElementById('dayOff2CountBadge').textContent = dayOff2Dates.length;
+
+      const out1 = masterDates.length > 0 ? dayOff1Dates.filter(d => !masterSet.has(d)) : [];
+      const out2 = masterDates.length > 0 ? dayOff2Dates.filter(d => !masterSet.has(d)) : [];
+      const uniqueOut1 = Array.from(new Set(out1));
+      const uniqueOut2 = Array.from(new Set(out2));
+
+      const info1 = document.getElementById('dayOff1ValidationInfo');
+      const details1 = document.getElementById('dayOff1OutDetails');
+      if (uniqueOut1.length > 0) {
+        info1.innerHTML = `
+          <span>Terdeteksi: <strong class="font-mono">${dayOff1Dates.length}</strong> tanggal</span>
+          <button
+            type="button"
+            onclick="toggleOutDetails('dayOff1')"
+            class="text-amber-800 hover:text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2.5 py-0.5 rounded-lg border border-amber-300 font-semibold transition inline-flex items-center gap-1 cursor-pointer shadow-sm"
+            title="Klik untuk melihat daftar tanggal di luar Data Utama"
+          >
+            <span>⚠️ ${uniqueOut1.length} tanggal di luar Data Utama</span>
+            <span class="underline ml-0.5">${appState.outDetailsOpen.dayOff1 ? '(Tutup)' : '(Lihat)'}</span>
+          </button>
+        `;
+        renderOutDetailsBox('dayOff1', uniqueOut1);
+      } else {
+        appState.outDetailsOpen.dayOff1 = false;
+        if (details1) details1.classList.add('hidden');
+        info1.innerHTML = `<span>Terdeteksi: <strong class="font-mono">${dayOff1Dates.length}</strong> tanggal</span><span class="text-emerald-700 font-medium">✓ Sesuai Data Tanggal</span>`;
+      }
+
+      const info2 = document.getElementById('dayOff2ValidationInfo');
+      const details2 = document.getElementById('dayOff2OutDetails');
+      if (uniqueOut2.length > 0) {
+        info2.innerHTML = `
+          <span>Terdeteksi: <strong class="font-mono">${dayOff2Dates.length}</strong> tanggal</span>
+          <button
+            type="button"
+            onclick="toggleOutDetails('dayOff2')"
+            class="text-indigo-800 hover:text-indigo-950 bg-indigo-200/70 hover:bg-indigo-200 px-2.5 py-0.5 rounded-lg border border-indigo-300 font-semibold transition inline-flex items-center gap-1 cursor-pointer shadow-sm"
+            title="Klik untuk melihat daftar tanggal di luar Data Utama"
+          >
+            <span>⚠️ ${uniqueOut2.length} tanggal di luar Data Utama</span>
+            <span class="underline ml-0.5">${appState.outDetailsOpen.dayOff2 ? '(Tutup)' : '(Lihat)'}</span>
+          </button>
+        `;
+        renderOutDetailsBox('dayOff2', uniqueOut2);
+      } else {
+        appState.outDetailsOpen.dayOff2 = false;
+        if (details2) details2.classList.add('hidden');
+        info2.innerHTML = `<span>Terdeteksi: <strong class="font-mono">${dayOff2Dates.length}</strong> tanggal</span><span class="text-emerald-700 font-medium">✓ Sesuai Data Tanggal</span>`;
+      }
+
+      // Gabungkan Day Off 1 dan Day Off 2
+      let merged = [...dayOff1Dates, ...dayOff2Dates];
+
+      const dedup = document.getElementById('khatibMergeDedup').checked;
+      const sortChrono = document.getElementById('khatibMergeSort').checked;
+      const trailingComma = document.getElementById('khatibMergeTrailingComma').checked;
+
+      if (dedup) {
+        merged = Array.from(new Set(merged));
+      }
+      if (sortChrono) {
+        merged.sort((a, b) => a.localeCompare(b));
+      }
+
+      const mergedOutputEl = document.getElementById('khatibMergedDayOffOutput');
+      const mergedBadgeEl = document.getElementById('mergedDayOffBadge');
+
+      mergedBadgeEl.textContent = `${merged.length} Tanggal Day Off`;
+
+      if (merged.length === 0) {
+        mergedOutputEl.value = '';
+      } else {
+        let formattedMerged = merged.join(', ');
+        if (trailingComma) formattedMerged += ', ';
+        mergedOutputEl.value = formattedMerged;
+      }
+
+      // Hitung juga Sisa Tanggal Tersedia (Data Tanggal Utama dikurangi Day Off 1 & 2)
+      const mergedSet = new Set(merged);
+      const remaining = masterDates.filter(d => !mergedSet.has(d));
+      const remainingOutputEl = document.getElementById('khatibRemainingDatesOutput');
+      const remainingBadgeEl = document.getElementById('availableAfterDayOffBadge');
+
+      remainingBadgeEl.textContent = `${remaining.length} Tanggal`;
+      remainingOutputEl.value = remaining.length > 0
+        ? (trailingComma ? `${remaining.join(', ')}, ` : remaining.join(', '))
+        : '';
+
+      if (appState.khatibPickerOpen) {
+        renderVisualPickerChips();
+      }
+
+      if (scrollToOutput) {
+        const card = document.getElementById('khatibOutputCard');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        card.classList.add('ring-4', 'ring-emerald-300');
+        setTimeout(() => card.classList.remove('ring-4', 'ring-emerald-300'), 800);
+        showToast('Gabungan Day Off 1 & 2 berhasil digenerate!');
+      }
+    }
+
+    /**
+     * Menampilkan / menyembunyikan panel rincian tanggal atau malam yang berada di luar Data Utama
+     */
+    function toggleOutDetails(key) {
+      appState.outDetailsOpen[key] = !appState.outDetailsOpen[key];
+      if (key === 'ramDayOff1') {
+        processKhatibRamadhanDayOff(false);
+      } else {
+        processKhatibDayOff(false);
+      }
+    }
+
+    function renderOutDetailsBox(key, items) {
+      const containerId = key === 'dayOff1'
+        ? 'dayOff1OutDetails'
+        : key === 'dayOff2'
+          ? 'dayOff2OutDetails'
+          : 'ramDayOff1OutDetails';
+
+      const el = document.getElementById(containerId);
+      if (!el) return;
+
+      if (!appState.outDetailsOpen[key] || items.length === 0) {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+      }
+
+      el.classList.remove('hidden');
+      const isRamadhan = key === 'ramDayOff1';
+      const isIndigo = key === 'dayOff2';
+
+      const chipsHtml = items.map(val => {
+        const label = isRamadhan ? `Malam ${val}` : val;
+        const subInfo = !isRamadhan ? formatIndonesianDate(val) : '';
+        return `
+          <div class="inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border ${isIndigo ? 'border-indigo-300 text-indigo-950' : 'border-amber-300 text-amber-950'} shadow-sm">
+            <span class="font-mono font-semibold text-xs">${label}</span>
+            ${subInfo ? `<span class="text-[10px] text-slate-500">(${subInfo})</span>` : ''}
+            <button
+              type="button"
+              onclick="removeSingleOutItem('${key}', '${val}')"
+              title="Hapus dari Day Off ini"
+              class="ml-0.5 text-slate-400 hover:text-red-600 font-bold px-1 rounded hover:bg-red-50 transition"
+            >
+              ✕
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      el.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b ${isIndigo ? 'border-indigo-200' : 'border-amber-200'} pb-2">
+          <span class="font-bold ${isIndigo ? 'text-indigo-950' : 'text-amber-950'}">
+            Daftar ${isRamadhan ? 'Malam' : 'Tanggal'} di Luar Data Utama (${items.length}):
+          </span>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onclick="addOutItemsToMaster('${key}')"
+              class="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition shadow-sm"
+            >
+              + Tambahkan ke Data Utama
+            </button>
+            <button
+              type="button"
+              onclick="removeAllOutItems('${key}')"
+              class="text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-200 font-semibold transition shadow-sm"
+            >
+              Hapus dari Day Off
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          ${chipsHtml}
+        </div>
+      `;
+    }
+
+    function removeSingleOutItem(key, valToRemove) {
+      if (key === 'ramDayOff1') {
+        const el = document.getElementById('khatibRamadhanDayOff1Input');
+        const nights = extractRamadhanNights(el.value, true).filter(n => String(n) !== String(valToRemove));
+        el.value = nights.join(', ');
+        processKhatibRamadhanDayOff(false);
+        showToast(`Malam ${valToRemove} dihapus dari Day Off 1`);
+      } else {
+        const targetId = key === 'dayOff1' ? 'khatibDayOff1Input' : 'khatibDayOff2Input';
+        const el = document.getElementById(targetId);
+        const dates = extractAndNormalizeDates(el.value).filter(d => d !== valToRemove);
+        el.value = dates.join(', ');
+        processKhatibDayOff(false);
+        showToast(`Tanggal ${valToRemove} dihapus dari ${key === 'dayOff1' ? 'Day Off 1' : 'Day Off 2'}`);
+      }
+    }
+
+    function removeAllOutItems(key) {
+      if (key === 'ramDayOff1') {
+        const masterSet = new Set(extractRamadhanNights(document.getElementById('khatibRamadhanMasterInput').value, true));
+        const el = document.getElementById('khatibRamadhanDayOff1Input');
+        const validNights = extractRamadhanNights(el.value, true).filter(n => masterSet.has(n));
+        el.value = validNights.join(', ');
+        appState.outDetailsOpen.ramDayOff1 = false;
+        processKhatibRamadhanDayOff(false);
+        showToast('Seluruh malam di luar Data Utama berhasil dihapus dari Day Off 1');
+      } else {
+        const masterSet = new Set(extractAndNormalizeDates(document.getElementById('khatibMasterDatesInput').value));
+        const targetId = key === 'dayOff1' ? 'khatibDayOff1Input' : 'khatibDayOff2Input';
+        const el = document.getElementById(targetId);
+        const validDates = extractAndNormalizeDates(el.value).filter(d => masterSet.has(d));
+        el.value = validDates.join(', ');
+        appState.outDetailsOpen[key] = false;
+        processKhatibDayOff(false);
+        showToast(`Seluruh tanggal di luar Data Utama dihapus dari ${key === 'dayOff1' ? 'Day Off 1' : 'Day Off 2'}`);
+      }
+    }
+
+    function addOutItemsToMaster(key) {
+      if (key === 'ramDayOff1') {
+        const masterEl = document.getElementById('khatibRamadhanMasterInput');
+        const dayOffEl = document.getElementById('khatibRamadhanDayOff1Input');
+        const combined = Array.from(new Set([
+          ...extractRamadhanNights(masterEl.value, true),
+          ...extractRamadhanNights(dayOffEl.value, true)
+        ])).sort((a, b) => a - b);
+        masterEl.value = combined.join(', ');
+        appState.outDetailsOpen.ramDayOff1 = false;
+        processKhatibRamadhanDayOff(false);
+        showToast('Malam tersebut berhasil ditambahkan ke Daftar Malam Utama');
+      } else {
+        const masterEl = document.getElementById('khatibMasterDatesInput');
+        const targetId = key === 'dayOff1' ? 'khatibDayOff1Input' : 'khatibDayOff2Input';
+        const dayOffEl = document.getElementById(targetId);
+        const combined = Array.from(new Set([
+          ...extractAndNormalizeDates(masterEl.value),
+          ...extractAndNormalizeDates(dayOffEl.value)
+        ])).sort((a, b) => a.localeCompare(b));
+        masterEl.value = combined.join(', ');
+        appState.outDetailsOpen[key] = false;
+        processKhatibDayOff(false);
+        showToast('Tanggal tersebut berhasil ditambahkan ke Daftar Tanggal Utama');
+      }
+    }
+
+    // ==================== HELPER UNTUK MENU MASJID ====================
+
+    function getActiveList() {
+      return appState[appState.activeTab];
+    }
+
+    function setActiveList(newList) {
+      appState[appState.activeTab] = newList;
+    }
+
+    function parseLocalDate(yyyyMmDd) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(yyyyMmDd)) return null;
+      const [y, m, d] = yyyyMmDd.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      if (
+        isNaN(dateObj.getTime()) ||
+        dateObj.getFullYear() !== y ||
+        dateObj.getMonth() !== m - 1 ||
+        dateObj.getDate() !== d
+      ) {
+        return null;
+      }
+      return dateObj;
+    }
+
+    function formatLocalDate(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatIndonesianDate(yyyyMmDd) {
+      const dateObj = parseLocalDate(yyyyMmDd);
+      if (!dateObj) return 'Format Tanggal Kustom';
+      try {
+        return new Intl.DateTimeFormat('id-ID', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(dateObj);
+      } catch (e) {
+        return 'Hari Jumat';
+      }
+    }
+
+    function getMonthGroupInfo(valueStr) {
+      const dateObj = parseLocalDate(valueStr);
+      if (!dateObj) {
+        return {
+          key: 'custom-other',
+          title: '📌 Tanggal / Item Lainnya'
+        };
+      }
+      const year = dateObj.getFullYear();
+      const monthIdx = dateObj.getMonth();
+      const key = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+      const title = `📅 ${INDONESIAN_MONTHS[monthIdx]} ${year}`;
+      return { key, title };
+    }
+
+    function switchTab(tabName) {
+      appState.activeTab = tabName;
+
+      const panels = {
+        jumat: document.getElementById('panelJumat'),
+        ramadhan: document.getElementById('panelRamadhan'),
+        manual: document.getElementById('panelManual')
+      };
+
+      const buttons = {
+        jumat: document.getElementById('tabBtnJumat'),
+        ramadhan: document.getElementById('tabBtnRamadhan'),
+        manual: document.getElementById('tabBtnManual')
+      };
+
+      const activeBtnClass = "px-3.5 py-2 rounded-lg bg-white text-emerald-700 shadow-sm transition flex items-center gap-1.5";
+      const inactiveBtnClass = "px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5";
+
+      Object.keys(panels).forEach(key => {
+        if (key === tabName) {
+          panels[key].classList.remove('hidden');
+          buttons[key].className = activeBtnClass;
+        } else {
+          panels[key].classList.add('hidden');
+          buttons[key].className = inactiveBtnClass;
+        }
+      });
+
+      updateSectionHeaders();
+      renderActiveList();
+    }
+
+    function updateSectionHeaders() {
+      const step1Title = document.getElementById('step1Title');
+      const step2Title = document.getElementById('step2Title');
+      const step3Title = document.getElementById('step3Title');
+      const quickAddInput = document.getElementById('quickAddInput');
+      const trailingExample = document.getElementById('trailingCommaExample');
+      const outputDescription = document.getElementById('outputDescription');
+
+      if (appState.activeTab === 'ramadhan') {
+        step1Title.textContent = 'Pengaturan Malam Ramadhan (Malam 1 – Malam 30)';
+        step2Title.textContent = 'Daftar Ceklis Malam Ramadhan';
+        step3Title.textContent = 'Hasil Rekap Malam Ramadhan (Tidak Diceklis)';
+        quickAddInput.placeholder = 'Tambah malam (misal: 15)...';
+        trailingExample.textContent = '2, 3, 4, 5, 7, ';
+        outputDescription.innerHTML = 'Berikut adalah daftar malam Ramadhan yang <strong>tidak diceklis</strong> berupa <strong>angka saja</strong> (<code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">2, 3, 4, 5, 7</code>):';
+      } else if (appState.activeTab === 'manual') {
+        step1Title.textContent = 'Input Manual Daftar Tanggal';
+        step2Title.textContent = 'Daftar Ceklis Tanggal (Input Manual)';
+        step3Title.textContent = 'Hasil Rekap Tanggal Manual (Tidak Diceklis)';
+        quickAddInput.placeholder = 'Tambah tanggal (2027-02-05)...';
+        trailingExample.textContent = 'yyyy-mm-dd, yyyy-mm-dd, ';
+        outputDescription.innerHTML = 'Berikut adalah daftar tanggal manual yang <strong>tidak diceklis</strong> dalam format <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>:';
+      } else {
+        step1Title.textContent = 'Generator Otomatis Hari Jumat';
+        step2Title.textContent = 'Daftar Ceklis Tanggal Khutbah Jumat';
+        step3Title.textContent = 'Hasil Rekap Tanggal Jumat (Tidak Diceklis)';
+        quickAddInput.placeholder = 'Tambah tanggal (2027-02-05)...';
+        trailingExample.textContent = 'yyyy-mm-dd, yyyy-mm-dd, ';
+        outputDescription.innerHTML = 'Berikut adalah daftar tanggal Jumat yang <strong>tidak diceklis</strong> dalam format <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>:';
+      }
+    }
+
+    function initDefaultData() {
+      appState.jumat = [];
+      appState.ramadhan = [];
+      appState.manual = [];
+
+      const manualTextarea = document.getElementById('manualTextarea');
+      if (manualTextarea) manualTextarea.value = '';
+    }
+
+    function resetCurrentModeDemo() {
+      appState.jumat = [];
+      appState.ramadhan = [];
+      appState.manual = [];
+
+      const manualTextarea = document.getElementById('manualTextarea');
+      if (manualTextarea) manualTextarea.value = '';
+
+      const quickAddInput = document.getElementById('quickAddInput');
+      if (quickAddInput) quickAddInput.value = '';
+
+      const outputText = document.getElementById('outputText');
+      if (outputText) outputText.value = '';
+
+      renderActiveList();
+      showToast('Semua daftar dan inputan pada menu Masjid berhasil dikosongkan!');
+    }
+
+    function generateFridays() {
+      const startVal = document.getElementById('startDate').value;
+      const endVal = document.getElementById('endDate').value;
+
+      if (!startVal || !endVal) {
+        showToast('Harap pilih Tanggal Mulai dan Tanggal Selesai', true);
+        return;
+      }
+
+      const start = parseLocalDate(startVal);
+      const end = parseLocalDate(endVal);
+
+      if (!start || !end || start > end) {
+        showToast('Tanggal Mulai tidak boleh lebih besar dari Tanggal Selesai', true);
+        return;
+      }
+
+      const existingMap = new Map();
+      appState.jumat.forEach(item => existingMap.set(item.value, item.checked));
+
+      const newJumatList = [];
+      const current = new Date(start.getTime());
+
+      while (current <= end) {
+        if (current.getDay() === 5) {
+          const dateStr = formatLocalDate(current);
+          newJumatList.push({
+            value: dateStr,
+            checked: existingMap.has(dateStr) ? existingMap.get(dateStr) : false
+          });
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      appState.jumat = newJumatList;
+      renderActiveList();
+      showToast(`Berhasil memuat ${newJumatList.length} hari Jumat`);
+    }
+
+    function generateRamadhanNights(startNight, endNight, preserveChecks = true) {
+      const s = Math.max(1, Math.min(30, parseInt(startNight, 10) || 1));
+      const e = Math.max(1, Math.min(30, parseInt(endNight, 10) || 30));
+      const minN = Math.min(s, e);
+      const maxN = Math.max(s, e);
+
+      const existingMap = new Map();
+      if (preserveChecks) {
+        appState.ramadhan.forEach(item => existingMap.set(item.night, item.checked));
+      }
+
+      const newList = [];
+      for (let i = minN; i <= maxN; i++) {
+        newList.push({
+          night: i,
+          checked: existingMap.has(i) ? existingMap.get(i) : false
+        });
+      }
+
+      appState.ramadhan = newList;
+      renderActiveList();
+    }
+
+    function generateRamadhanCustomRange() {
+      const s = document.getElementById('ramadhanStartInput').value;
+      const e = document.getElementById('ramadhanEndInput').value;
+      generateRamadhanNights(s, e, true);
+      showToast(`Daftar Malam Ramadhan diperbarui (${appState.ramadhan.length} malam)`);
+    }
+
+    function loadRamadhanExample() {
+      document.getElementById('ramadhanStartInput').value = 1;
+      document.getElementById('ramadhanEndInput').value = 30;
+      const uncheckedTargets = new Set([2, 3, 4, 5, 7]);
+      const items = [];
+      for (let i = 1; i <= 30; i++) {
+        items.push({
+          night: i,
+          checked: !uncheckedTargets.has(i)
+        });
+      }
+      appState.ramadhan = items;
+      if (appState.activeTab !== 'ramadhan') {
+        switchTab('ramadhan');
+      } else {
+        renderActiveList();
+      }
+      showToast('Contoh Ramadhan dimuat (Output: 2, 3, 4, 5, 7)');
+    }
+
+    function fillManualSampleText() {
+      const sample = [
+        '2027-01-01',
+        '2027-01-08',
+        '2027-01-15',
+        '2027-01-22',
+        '2027-02-05',
+        '2027-02-12'
+      ].join('\n');
+      document.getElementById('manualTextarea').value = sample;
+      showToast('Contoh tanggal dimasukkan ke kotak input manual');
+    }
+
+    function processManualInput(replaceExisting = false) {
+      const raw = document.getElementById('manualTextarea').value.trim();
+      if (!raw) {
+        showToast('Kotak input manual masih kosong', true);
+        return;
+      }
+
+      const tokens = raw
+        .split(/[\n,;]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (tokens.length === 0) {
+        showToast('Tidak ada tanggal valid yang ditemukan', true);
+        return;
+      }
+
+      if (replaceExisting) {
+        const uniqueTokens = Array.from(new Set(tokens));
+        appState.manual = uniqueTokens.map(val => ({
+          value: val,
+          checked: false
+        }));
+        renderActiveList();
+        showToast(`Daftar diganti dengan ${appState.manual.length} tanggal manual`);
+      } else {
+        const existingSet = new Set(appState.manual.map(item => item.value));
+        let added = 0;
+        tokens.forEach(token => {
+          if (!existingSet.has(token)) {
+            appState.manual.push({ value: token, checked: false });
+            existingSet.add(token);
+            added++;
+          }
+        });
+        renderActiveList();
+        showToast(`${added} tanggal baru ditambahkan ke daftar manual`);
+      }
+    }
+
+    function quickAddItem() {
+      const input = document.getElementById('quickAddInput');
+      const rawVal = input.value.trim();
+
+      if (!rawVal) {
+        showToast('Masukkan nilai terlebih dahulu', true);
+        return;
+      }
+
+      if (appState.activeTab === 'ramadhan') {
+        const numMatch = rawVal.match(/\d+/);
+        if (!numMatch) {
+          showToast('Masukkan angka malam antara 1 sampai 30', true);
+          return;
+        }
+        const nightNum = parseInt(numMatch[0], 10);
+        if (nightNum < 1 || nightNum > 30) {
+          showToast('Nomor malam Ramadhan harus antara 1 s/d 30', true);
+          return;
+        }
+        const exists = appState.ramadhan.some(item => item.night === nightNum);
+        if (exists) {
+          showToast(`Malam ${nightNum} sudah ada di dalam daftar`, true);
+          return;
+        }
+        appState.ramadhan.push({ night: nightNum, checked: false });
+        appState.ramadhan.sort((a, b) => a.night - b.night);
+        input.value = '';
+        renderActiveList();
+        showToast(`Malam ${nightNum} berhasil ditambahkan`);
+      } else {
+        const list = getActiveList();
+        if (list.some(item => item.value === rawVal)) {
+          showToast(`Tanggal ${rawVal} sudah ada di daftar`, true);
+          return;
+        }
+        list.push({ value: rawVal, checked: false });
+        list.sort((a, b) => a.value.localeCompare(b.value));
+        input.value = '';
+        renderActiveList();
+        showToast(`Tanggal ${rawVal} berhasil ditambahkan`);
+      }
+    }
+
+    function createItemCardHTML(item, index) {
+      const isChecked = item.checked;
+      const isRamadhan = appState.activeTab === 'ramadhan';
+
+      const cardClasses = isChecked
+        ? 'bg-emerald-50/90 border-emerald-400 text-emerald-950'
+        : 'bg-white border-slate-200 hover:border-emerald-300 text-slate-800 shadow-sm';
+
+      const badgeClasses = isChecked
+        ? 'bg-emerald-200/80 text-emerald-900 border border-emerald-300'
+        : 'bg-amber-50 text-amber-800 border border-amber-300';
+
+      const badgeText = isChecked ? 'Diceklis (Sembunyi)' : 'Tidak Diceklis (Tampil)';
+
+      const titleText = isRamadhan ? `Malam ${item.night}` : item.value;
+      const subtitleText = isRamadhan
+        ? `Ramadhan Malam ke-${item.night} (Output: ${item.night})`
+        : formatIndonesianDate(item.value);
+
+      return `
+        <div
+          onclick="toggleItem(${index})"
+          class="checkbox-card cursor-pointer rounded-xl border p-3.5 flex items-center justify-between gap-3 ${cardClasses}"
+        >
+          <div class="flex items-center gap-3.5 min-w-0">
+            <input
+              type="checkbox"
+              ${isChecked ? 'checked' : ''}
+              onclick="event.stopPropagation(); toggleItem(${index});"
+              class="w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer shrink-0"
+            />
+            <div class="truncate">
+              <div class="font-mono font-semibold text-sm sm:text-base tracking-tight ${isChecked ? 'line-through text-emerald-700/70' : 'text-slate-900'}">
+                ${titleText}
+              </div>
+              <div class="text-xs ${isChecked ? 'text-emerald-600/80' : 'text-slate-500'} truncate">
+                ${subtitleText}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-[11px] font-medium px-2.5 py-1 rounded-full ${badgeClasses}">
+              ${badgeText}
+            </span>
+            <button
+              type="button"
+              onclick="event.stopPropagation(); removeItem(${index});"
+              title="Hapus dari daftar"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActiveList() {
+      const container = document.getElementById('dateListContainer');
+      const emptyState = document.getElementById('emptyState');
+      const list = getActiveList();
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        updateStats();
+        generateOutput(false);
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      const isRamadhan = appState.activeTab === 'ramadhan';
+
+      if (isRamadhan) {
+        const groups = [
+          { key: 'ramadhan-1', title: '🌙 10 Malam Pertama (Malam 1 – 10)', entries: [] },
+          { key: 'ramadhan-2', title: '🌙 10 Malam Kedua / Pertengahan (Malam 11 – 20)', entries: [] },
+          { key: 'ramadhan-3', title: '🌙 10 Malam Terakhir (Malam 21 – 30)', entries: [] }
+        ];
+
+        list.forEach((item, index) => {
+          if (item.night <= 10) groups[0].entries.push({ item, index });
+          else if (item.night <= 20) groups[1].entries.push({ item, index });
+          else groups[2].entries.push({ item, index });
+        });
+
+        const nonEmptyGroups = groups.filter(g => g.entries.length > 0);
+
+        container.innerHTML = nonEmptyGroups.map(group => {
+          const totalInGroup = group.entries.length;
+          const checkedInGroup = group.entries.filter(e => e.item.checked).length;
+          const uncheckedInGroup = totalInGroup - checkedInGroup;
+          const indicesJson = JSON.stringify(group.entries.map(e => e.index));
+
+          return `
+            <div class="rounded-2xl border border-slate-200/90 bg-slate-50/50 overflow-hidden">
+              <div class="bg-slate-100/90 px-4 py-2.5 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-slate-800 text-xs sm:text-sm">${group.title}</h3>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white text-slate-600 border border-slate-200">
+                    ${totalInGroup} malam
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span class="text-slate-500 mr-1">
+                    Tampil: <strong class="font-mono text-amber-700">${uncheckedInGroup}</strong> | Diceklis: <strong class="font-mono text-emerald-700">${checkedInGroup}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onclick='toggleGroupByIndices(${indicesJson}, true)'
+                    class="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-emerald-700 border border-slate-200 font-medium transition"
+                  >
+                    Ceklis 10 Malam Ini
+                  </button>
+                  <button
+                    type="button"
+                    onclick='toggleGroupByIndices(${indicesJson}, false)'
+                    class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-medium transition"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+              <div class="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${group.entries.map(e => createItemCardHTML(e.item, e.index)).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        const monthGroupsMap = new Map();
+
+        list.forEach((item, index) => {
+          const info = getMonthGroupInfo(item.value);
+          if (!monthGroupsMap.has(info.key)) {
+            monthGroupsMap.set(info.key, {
+              key: info.key,
+              title: info.title,
+              entries: []
+            });
+          }
+          monthGroupsMap.get(info.key).entries.push({ item, index });
+        });
+
+        const sortedGroups = Array.from(monthGroupsMap.values()).sort((a, b) => a.key.localeCompare(b.key));
+
+        container.innerHTML = sortedGroups.map(group => {
+          const totalInMonth = group.entries.length;
+          const checkedInMonth = group.entries.filter(e => e.item.checked).length;
+          const uncheckedInMonth = totalInMonth - checkedInMonth;
+          const indicesJson = JSON.stringify(group.entries.map(e => e.index));
+
+          return `
+            <div class="rounded-2xl border border-slate-200/90 bg-slate-50/50 overflow-hidden">
+              <div class="bg-slate-100/90 px-4 py-2.5 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-slate-800 text-xs sm:text-sm">${group.title}</h3>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white text-slate-600 border border-slate-200">
+                    ${totalInMonth} tanggal
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span class="text-slate-500 mr-1">
+                    Tampil: <strong class="font-mono text-amber-700">${uncheckedInMonth}</strong> | Diceklis: <strong class="font-mono text-emerald-700">${checkedInMonth}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onclick='toggleGroupByIndices(${indicesJson}, true)'
+                    class="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-emerald-700 border border-slate-200 font-medium transition"
+                  >
+                    Ceklis Bulan Ini
+                  </button>
+                  <button
+                    type="button"
+                    onclick='toggleGroupByIndices(${indicesJson}, false)'
+                    class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-medium transition"
+                  >
+                    Reset Bulan Ini
+                  </button>
+                </div>
+              </div>
+              <div class="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${group.entries.map(e => createItemCardHTML(e.item, e.index)).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      updateStats();
+      generateOutput(false);
+    }
+
+    function toggleGroupByIndices(indices, checkState) {
+      const list = getActiveList();
+      if (!Array.isArray(indices)) return;
+      indices.forEach(idx => {
+        if (list[idx]) {
+          list[idx].checked = checkState;
+        }
+      });
+      renderActiveList();
+    }
+
+    function toggleItem(index) {
+      const list = getActiveList();
+      if (!list[index]) return;
+      list[index].checked = !list[index].checked;
+      renderActiveList();
+    }
+
+    function removeItem(index) {
+      const list = getActiveList();
+      if (!list[index]) return;
+      list.splice(index, 1);
+      renderActiveList();
+    }
+
+    function toggleAll(checkState) {
+      const list = getActiveList();
+      list.forEach(item => {
+        item.checked = checkState;
+      });
+      renderActiveList();
+    }
+
+    function invertSelection() {
+      const list = getActiveList();
+      list.forEach(item => {
+        item.checked = !item.checked;
+      });
+      renderActiveList();
+    }
+
+    function clearCurrentList() {
+      setActiveList([]);
+      renderActiveList();
+      showToast('Daftar pada tab ini telah dikosongkan');
+    }
+
+    function updateStats() {
+      const list = getActiveList();
+      const total = list.length;
+      const checked = list.filter(d => d.checked).length;
+      const unchecked = total - checked;
+
+      document.getElementById('countTotal').textContent = total;
+      document.getElementById('countChecked').textContent = checked;
+      document.getElementById('countUnchecked').textContent = unchecked;
+
+      const labelUnit = appState.activeTab === 'ramadhan' ? 'Malam Tersedia' : 'Tanggal Tersedia';
+      document.getElementById('outputBadgeCount').textContent = `${unchecked} ${labelUnit}`;
+    }
+
+    function generateOutput(scrollToView = false) {
+      const list = getActiveList();
+      const isRamadhan = appState.activeTab === 'ramadhan';
+
+      const uncheckedValues = list
+        .filter(item => !item.checked)
+        .map(item => isRamadhan ? String(item.night) : item.value);
+
+      const useTrailingComma = document.getElementById('trailingCommaToggle').checked;
+      const outputTextarea = document.getElementById('outputText');
+
+      if (uncheckedValues.length === 0) {
+        outputTextarea.value = '';
+      } else {
+        let result = uncheckedValues.join(', ');
+        if (useTrailingComma) {
+          result += ', ';
+        }
+        outputTextarea.value = result;
+      }
+
+      if (scrollToView) {
+        const outputSection = document.getElementById('outputSection');
+        outputSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        outputSection.classList.add('ring-4', 'ring-emerald-300');
+        setTimeout(() => {
+          outputSection.classList.remove('ring-4', 'ring-emerald-300');
+        }, 800);
+        showToast('Rekap berhasil dibuat!');
+      }
+    }
+
+    // ==================== CLIPBOARD & TOAST NOTIFICATION ====================
+
+    function copyResult() {
+      copyTextFromElement('outputText', 'Berhasil disalin ke clipboard!', 'copyBtnText');
+    }
+
+    function copyTextFromElement(elementId, successMessage, buttonSpanId = null) {
+      const outputTextarea = document.getElementById(elementId);
+      const text = outputTextarea ? outputTextarea.value.trim() : '';
+
+      if (!text) {
+        showToast('Tidak ada teks untuk disalin!', true);
+        return;
+      }
+
+      outputTextarea.select();
+      outputTextarea.setSelectionRange(0, 99999);
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast(successMessage);
+          if (buttonSpanId) animateCopyButton(buttonSpanId);
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(outputTextarea.value).then(() => {
+            showToast(successMessage);
+            if (buttonSpanId) animateCopyButton(buttonSpanId);
+          });
+        }
+      } catch (err) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(outputTextarea.value).then(() => {
+            showToast(successMessage);
+            if (buttonSpanId) animateCopyButton(buttonSpanId);
+          });
+        }
+      }
+
+      if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+      }
+    }
+
+    function animateCopyButton(spanId) {
+      const btnText = document.getElementById(spanId);
+      if (!btnText) return;
+      const original = btnText.textContent;
+      btnText.textContent = 'Tersalin!';
+      setTimeout(() => {
+        btnText.textContent = original;
+      }, 2000);
+    }
+
+    function showToast(message, isWarning = false) {
+      const toast = document.getElementById('toast');
+      const toastContent = document.getElementById('toastContent');
+      const toastMessage = document.getElementById('toastMessage');
+
+      toastMessage.textContent = message;
+
+      if (isWarning) {
+        toastContent.className = 'bg-amber-800 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 border border-amber-600';
+      } else {
+        toastContent.className = 'bg-emerald-800 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 border border-emerald-600';
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2600);
+    }
+
+    // Jalankan saat halaman selesai dimuat
+    window.onload = function () {
+      initDefaultData();
+      updateSectionHeaders();
+      renderActiveList();
+      initKhatibDefaults();
+    };
+  </script>
+</body>
+</html>
