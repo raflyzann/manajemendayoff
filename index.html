@@ -242,7 +242,7 @@
               <!-- Tabs Toggle -->
               <div class="inline-flex rounded-xl bg-slate-200/80 p-1 text-xs font-semibold self-start sm:self-auto gap-1">
                 <button type="button" id="tabBtnJumat" onclick="switchTab('jumat')" class="px-3.5 py-2 rounded-lg bg-white text-emerald-700 shadow-sm transition flex items-center gap-1.5">
-                  <span>🕌 Otomatis Jumat</span>
+                  <span>🕌 Jumat</span>
                 </button>
                 <button type="button" id="tabBtnRamadhan" onclick="switchTab('ramadhan')" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
                   <span>🌙 Ramadhan</span>
@@ -485,6 +485,39 @@
                     <span id="copyBtnText">Copy Teks</span>
                   </button>
                 </div>
+              </div>
+
+              <!-- Opsi Tambahan: Lihat juga Tanggal / Malam yang Terceklis -->
+              <div class="pt-3 border-t border-emerald-200/70">
+                <details class="group">
+                  <summary class="cursor-pointer list-none flex items-center justify-between text-xs font-semibold text-emerald-900 hover:text-emerald-700 py-1">
+                    <span class="flex items-center gap-1.5">
+                      <svg class="w-4 h-4 transition-transform group-open:rotate-90 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                      <span id="checkedSeeAlsoTitle">Lihat juga: Tanggal yang Terceklis</span>
+                    </span>
+                    <span id="checkedOutputBadge" class="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-800">0 Tanggal</span>
+                  </summary>
+                  <div class="mt-3 space-y-2.5">
+                    <textarea
+                      id="checkedOutputText"
+                      readonly
+                      rows="3"
+                      placeholder="Belum ada tanggal/malam yang diceklis."
+                      class="w-full p-3.5 rounded-xl bg-slate-50 text-slate-700 font-mono text-xs sm:text-sm leading-relaxed border border-slate-300 focus:outline-none"
+                    ></textarea>
+                    <div class="flex justify-end">
+                      <button
+                        type="button"
+                        onclick="copyTextFromElement('checkedOutputText', 'Daftar yang terceklis berhasil disalin!')"
+                        class="text-xs px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition"
+                      >
+                        Copy Tanggal Terceklis
+                      </button>
+                    </div>
+                  </div>
+                </details>
               </div>
             </div>
           </section>
@@ -2894,6 +2927,7 @@
       const quickAddInput = document.getElementById('quickAddInput');
       const trailingExample = document.getElementById('trailingCommaExample');
       const outputDescription = document.getElementById('outputDescription');
+      const checkedSeeAlsoTitle = document.getElementById('checkedSeeAlsoTitle');
 
       if (appState.activeTab === 'ramadhan') {
         step1Title.textContent = 'Pengaturan Malam Ramadhan (Malam 1 – Malam 30)';
@@ -2902,6 +2936,7 @@
         quickAddInput.placeholder = 'Tambah malam (misal: 15)...';
         trailingExample.textContent = '2, 3, 4, 5, 7, ';
         outputDescription.innerHTML = 'Berikut adalah daftar malam Ramadhan yang <strong>tidak diceklis</strong> berupa <strong>angka saja</strong> (<code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">2, 3, 4, 5, 7</code>):';
+        if (checkedSeeAlsoTitle) checkedSeeAlsoTitle.textContent = 'Lihat juga: Malam yang Terceklis';
       } else if (appState.activeTab === 'manual') {
         step1Title.textContent = 'Input Manual Daftar Tanggal';
         step2Title.textContent = 'Daftar Ceklis Tanggal (Input Manual)';
@@ -2909,6 +2944,7 @@
         quickAddInput.placeholder = 'Tambah tanggal (2027-02-05)...';
         trailingExample.textContent = 'yyyy-mm-dd, yyyy-mm-dd, ';
         outputDescription.innerHTML = 'Berikut adalah daftar tanggal manual yang <strong>tidak diceklis</strong> dalam format <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>:';
+        if (checkedSeeAlsoTitle) checkedSeeAlsoTitle.textContent = 'Lihat juga: Tanggal yang Terceklis';
       } else {
         step1Title.textContent = 'Generator Otomatis Hari Jumat';
         step2Title.textContent = 'Daftar Ceklis Tanggal Khutbah Jumat';
@@ -2916,6 +2952,7 @@
         quickAddInput.placeholder = 'Tambah tanggal (2027-02-05)...';
         trailingExample.textContent = 'yyyy-mm-dd, yyyy-mm-dd, ';
         outputDescription.innerHTML = 'Berikut adalah daftar tanggal Jumat yang <strong>tidak diceklis</strong> dalam format <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700">yyyy-mm-dd, yyyy-mm-dd</code>:';
+        if (checkedSeeAlsoTitle) checkedSeeAlsoTitle.textContent = 'Lihat juga: Tanggal yang Terceklis';
       }
     }
 
@@ -3387,6 +3424,12 @@
 
       const labelUnit = appState.activeTab === 'ramadhan' ? 'Malam Tersedia' : 'Tanggal Tersedia';
       document.getElementById('outputBadgeCount').textContent = `${unchecked} ${labelUnit}`;
+
+      const checkedUnit = appState.activeTab === 'ramadhan' ? 'Malam' : 'Tanggal';
+      const checkedBadge = document.getElementById('checkedOutputBadge');
+      if (checkedBadge) {
+        checkedBadge.textContent = `${checked} ${checkedUnit}`;
+      }
     }
 
     function generateOutput(scrollToView = false) {
@@ -3397,8 +3440,13 @@
         .filter(item => !item.checked)
         .map(item => isRamadhan ? String(item.night) : item.value);
 
+      const checkedValues = list
+        .filter(item => item.checked)
+        .map(item => isRamadhan ? String(item.night) : item.value);
+
       const useTrailingComma = document.getElementById('trailingCommaToggle').checked;
       const outputTextarea = document.getElementById('outputText');
+      const checkedTextarea = document.getElementById('checkedOutputText');
 
       if (uncheckedValues.length === 0) {
         outputTextarea.value = '';
@@ -3408,6 +3456,18 @@
           result += ', ';
         }
         outputTextarea.value = result;
+      }
+
+      if (checkedTextarea) {
+        if (checkedValues.length === 0) {
+          checkedTextarea.value = '';
+        } else {
+          let checkedResult = checkedValues.join(', ');
+          if (useTrailingComma) {
+            checkedResult += ', ';
+          }
+          checkedTextarea.value = checkedResult;
+        }
       }
 
       if (scrollToView) {
